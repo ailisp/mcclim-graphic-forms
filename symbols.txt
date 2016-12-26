@@ -1,0 +1,126 @@
+(defpackage :clim-backend
+  (:nicknames :climb)
+  (:use :clim :clim-extensions)
+  (:export
+   ;; Originally in CLIM-INTERNALS
+   #:get-next-event
+   #:invoke-with-special-choices
+   #:make-graft
+   #:medium-draw-circle*
+   #:medium-draw-glyph
+   #:mirror-transformation
+   #:port-allocate-pixmap
+   #:port-deallocate-pixmap
+   #:port-disable-sheet				;
+   #:port-enable-sheet				;
+   #:port-force-output				;
+   #:port-frame-keyboard-input-focus		
+   #:port-grab-pointer				;
+   #:port-mirror-height				;
+   #:port-mirror-width				;
+   #:port-motion-hints				;This function and (setf port-motion-hints) are performance plus specific to CLX, not useful on Windows
+   #:port-set-mirror-region			;
+   #:port-set-mirror-transformation		;
+   #:port-set-sheet-region			;
+   #:port-set-sheet-transformation		;
+   #:port-ungrab-pointer
+   #:queue-callback				; this has been moved to clim-core, not backend
+   #:set-sheet-pointer-cursor
+   #:synthesize-pointer-motion-event
+   #:text-style-character-width
+   ;; From CLIM (mentioned in the spec)
+   #:adopt-frame
+   #:allocate-space
+   #:destroy-mirror
+   #:destroy-port
+   #:graft					; must
+   #:graft-height				; must - screen height
+   #:graft-width				; must - screen width
+   #:handle-repaint				; optional for non regular repaint strategy
+   #:make-medium				; must  
+   #:make-pane-1				; must
+   #:medium-beep				; optional
+   #:medium-buffering-output-p			; must
+   #:medium-clear-area				; must
+   #:medium-clipping-region			; has move to clim-basic/medium.lisp
+   #:medium-copy-area				; must
+   #:medium-draw-ellipse*			; must
+   #:medium-draw-line*				; must
+   #:medium-draw-lines*				; must
+   #:medium-draw-point*				; must
+   #:medium-draw-points*			; must
+   #:medium-draw-polygon*			; must
+   #:medium-draw-rectangle*			; must
+   #:medium-draw-rectangles*			; must
+   #:medium-draw-text*				; must
+   #:medium-finish-output			; must
+   #:medium-force-output			; must
+   #:medium-line-style				; must
+   #:medium-text-style				; must
+   #:note-space-requirements-changed		; optional
+   #:pointer-button-state			; optional			
+   #:pointer-modifier-state			; optional
+   #:pointer-position				; optional
+   #:realize-mirror				; must
+   #:text-size					; must  
+   #:text-style-ascent				; must
+   #:text-style-descent				; must
+   #:text-style-height				; must
+   #:text-style-mapping				; optional a way to save text-style->font mapping
+   #:text-style-width				; must
+
+   ;; Text selection protocol
+   #:selection-owner
+   #:selection-timestamp
+   #:selection-event
+   #:selection-clear-event
+   #:selection-notify-event
+   #:selection-request-event
+   #:selection-event-requestor
+   #:request-selection
+   #:release-selection
+   #:bind-selection
+   #:send-selection
+   #:get-selection-from-event
+   ;; CLIM-EXTENSIONS
+   #:medium-miter-limit				; optional determine a draw for miter < sina/2
+   ))
+
+(defmethod port-set-mirror-region ((port graphic-forms-port) (mirror gfw-top-level) region)
+  (let ((size (<+ `(gfs:make-size :width ,(floor (bounding-rectangle-width region))
+				  :height ,(floor (bounding-rectangle-height region))))))
+    (<+ `(setf (gfw:size ,mirror) (gfw::compute-outer-size ,mirror ,size)))))
+
+(defmethod port-set-mirror-transformation ((port graphic-forms-port) (mirror gfw-top-level) transformation)
+  (multiple-value-bind (x y) (transform-position transformation 0 0)
+    (let ((pos (<+ `(gfs:make-point :x ,x :y ,y))))
+      (<+ `(setf (gfw:location ,mirror) ,pos)))))
+
+;;; This function and (setf port-motion-hints) are performance plus specific to CLX, not useful on Windows
+(defmethod port-motion-hints ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
+  ())
+
+(defmethod (setf port-motion-hints)
+    (value (port graphic-forms-port) (sheet mirrored-sheet-mixin))
+  value)
+
+;;; This function and port-mirror-height are not in spec and not used by other codes.
+(defmethod port-mirror-width ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
+  #+nil (<- `(gfs::debug-format "port-mirror-width called for ~a~%" ,sheet))
+  (let ((mirror (climi::port-lookup-mirror port sheet)))
+    (<+ `(gfs:size-width (gfw:size ,mirror)))))
+
+(defmethod port-mirror-height ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
+  #+nil (<- `(gfs::debug-format "port-mirror-height called for ~a~%" ,sheet))
+  (let ((mirror (climi::port-lookup-mirror port sheet)))
+    (<+ `(gfs:size-height (gfw:size ,mirror)))))
+
+(defmethod port-enable-sheet ((port gf-port) (sheet mirrored-sheet-mixin))
+  (<+ `(gfw:show ,(climi::port-lookup-mirror port sheet) t)))
+
+(defmethod port-disable-sheet ((port gf-port) (sheet mirrored-sheet-mixin))
+  (<+ `(gfw:show ,(climi::port-lookup-mirror port sheet) nil)))
+
+(defmethod port-force-output ((port graphic-forms-port))
+  "Sent buffered request to graphic-forms-server, currently all request is not buffered so this is dummy."
+  nil)
