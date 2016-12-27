@@ -67,10 +67,12 @@
 ;; 	(sheet-mirror (medium-sheet medium)))))
 
 
+;;; For gf-toplevel-sheet-pane, the sheet-region is incorrect, it should be modify to the
+;;; actual window size in apropriate place
 (defun target-of (medium)
   (let ((sheet (medium-sheet medium)))
     (or (image-of medium)
-	(let* ((region (sheet-mirror-region sheet))
+	(let* ((region (sheet-region sheet))
 	       (width (floor (bounding-rectangle-max-x region)))
 	       (height (floor (bounding-rectangle-max-y region))))
 	  (setf (image-of medium)
