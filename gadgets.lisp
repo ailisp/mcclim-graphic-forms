@@ -42,8 +42,8 @@
       (setf (sheet-parent menu-item) menu-pane)
       (realize-mirror port menu-item))))
 
-(defmethod make-pane-2 ((type (eql 'climi::menu-bar)) &rest initargs)
-  (apply #'make-instance 'gfw-menu-bar-pane initargs))
+;; (defmethod make-pane-2 ((type (eql 'climi::menu-bar)) &rest initargs)
+;;   (apply #'make-instance 'gfw-menu-bar-pane initargs))
 
 (defmethod realize-mirror ((port graphic-forms-port) (pane gfw-menu-bar-pane))
   (let* ((top-level (sheet-mirror (sheet-parent (sheet-parent pane))))
@@ -57,8 +57,8 @@
   (let ((mirror (climi::port-lookup-mirror port pane)))
     (climi::port-unregister-mirror port pane mirror)))
 
-(defmethod make-pane-2 ((type (eql 'climi::menu-button-submenu-pane)) &rest initargs)
-  (apply #'make-instance 'gfw-menu-pane initargs))
+;; (defmethod make-pane-2 ((type (eql 'climi::menu-button-submenu-pane)) &rest initargs)
+;;   (apply #'make-instance 'gfw-menu-pane initargs))
 
 (defmethod realize-mirror ((port graphic-forms-port) (pane gfw-menu-pane))
   (let* ((parent (sheet-mirror (sheet-parent pane)))
@@ -72,8 +72,8 @@
   (let ((mirror (climi::port-lookup-mirror port pane)))
     (climi::port-unregister-mirror port pane mirror)))
 
-(defmethod make-pane-2 ((type (eql 'climi::menu-button-leaf-pane)) &rest initargs)
-  (apply #'make-instance 'gfw-menu-item-pane initargs))
+;; (defmethod make-pane-2 ((type (eql 'climi::menu-button-leaf-pane)) &rest initargs)
+;;   (apply #'make-instance 'gfw-menu-item-pane initargs))
 
 (defmethod realize-mirror ((port graphic-forms-port) (pane gfw-menu-item-pane))
   (let* ((menu (sheet-mirror (sheet-parent pane)))
@@ -100,26 +100,27 @@
 ;;; other gadgets
 ;;;
 
-(defclass gf-push-button-pane (standard-full-mirrored-sheet-mixin climi::push-button-pane)
-  ())
+;;; This is unscientific, should avoid
+;; (defclass graphic-forms-push-button-pane (standard-full-mirrored-sheet-mixin climi::push-button-pane)
+;;   ())
 
-(defmethod make-pane-2 ((type (eql 'push-button)) &rest initargs)
-  (debug-prin1 "make-pane-2 called on type: " type)
-  (apply #'make-instance 'gf-push-button-pane initargs))
+;; (defmethod make-pane-2 ((type (eql 'push-button)) &rest initargs)
+;;   (debug-prin1 "make-pane-2 called on type: " type)
+;;   (apply #'make-instance 'gf-push-button-pane initargs))
 
-(defmethod realize-mirror ((port graphic-forms-port) (gadget gf-push-button-pane))
-  (debug-prin1 "realize-mirror called on gadget: " gadget)
-  (debug-prin1 "realize-mirror called on" gadget)
-  (let* ((parent-mirror (sheet-mirror (sheet-parent gadget)))
-         (mirror (<+ `(make-instance 'gfw-button
-				     :sheet ,gadget
-				     :parent ,parent-mirror
-				     :dispatcher ,*pane-dispatcher*
-				     :style '(:push-button)))))
-    (if (gadget-label gadget)
-      (<+ `(setf (gfw:text ,mirror) ,(gadget-label gadget))))
-    (climi::port-register-mirror port gadget mirror)
-    mirror))
+;; (defmethod realize-mirror ((port graphic-forms-port) (gadget gf-push-button-pane))
+;;   (debug-prin1 "realize-mirror called on gadget: " gadget)
+;;   (debug-prin1 "realize-mirror called on" gadget)
+;;   (let* ((parent-mirror (sheet-mirror (sheet-parent gadget)))
+;;          (mirror (<+ `(make-instance 'gfw-button
+;; 				     :sheet ,gadget
+;; 				     :parent ,parent-mirror
+;; 				     :dispatcher ,*pane-dispatcher*
+;; 				     :style '(:push-button)))))
+;;     (if (gadget-label gadget)
+;;       (<+ `(setf (gfw:text ,mirror) ,(gadget-label gadget))))
+;;     (climi::port-register-mirror port gadget mirror)
+;;     mirror))
 
 (defmethod realize-mirror ((port graphic-forms-port) (gadget toggle-button))
   #+nil (<+ `(gfs::debug-format "realizing ~a~%" ,gadget))

@@ -1,5 +1,7 @@
 (in-package :clim-graphic-forms)
 
+;;; This represents server side object
+;;; TODO: move to server.lisp
 (defclass gf-mirror-mixin ()
   ((sheet
     :accessor sheet
@@ -118,10 +120,10 @@
 	   (find-class (intern (symbol-name type) :climi))
 	   (find-class type)))))
 
-(defgeneric make-pane-2 (type &rest initargs)
-  (:documentation "Implement this to instantiate specific pane types.")
-  (:method (type &rest initargs)
-    (apply #'make-instance (resolve-abstract-pane-name type) initargs)))
+;; (defgeneric make-pane-2 (type &rest initargs)
+;;   (:documentation "Implement this to instantiate specific pane types.")
+;;   (:method (type &rest initargs)
+;;     (apply #'make-instance (resolve-abstract-pane-name type) initargs)))
 
 ;;;
 ;;; helper functions
@@ -194,28 +196,25 @@
 (defmethod port-set-mirror-transformation ((port graphic-forms-port) (mirror gfw-menu-item) transformation)
   (declare (ignore port mirror transformation)))
 
-(defclass gf-top-level-sheet-pane (standard-full-mirrored-sheet-mixin
-				   permanent-medium-sheet-output-mixin
-				   climi::top-level-sheet-pane)
+(defclass graphic-forms-top-level-sheet-pane (standard-full-mirrored-sheet-mixin
+					      permanent-medium-sheet-output-mixin
+					      climi::top-level-sheet-pane)
   ())
-
-(defmethod make-pane-2 ((type (eql 'climi::top-level-sheet-pane)) &rest initargs)
-  (apply #'make-instance 'gf-top-level-sheet-pane initargs))
 
 ;;;
 ;;; sheet methods
 ;;;
 
-(defmethod realize-mirror ((port graphic-forms-port) (sheet gf-top-level-sheet-pane))
+(defmethod realize-mirror ((port graphic-forms-port) (sheet graphic-forms-top-level-sheet-pane))
   (debug-prin1 "realize-mirror called on: " sheet)
   (let* ((mirror (<+ `(make-instance 'gfw-top-level
 				     :sheet ,sheet
 				     :dispatcher ,*sheet-dispatcher*
 				     :style '(:workspace)
 				     :text ,(frame-pretty-name (pane-frame sheet))))))
-    (let ((menu-bar (<+ `(make-instance 'gfw-menu :handle (gfs::create-menu)))))
-      (<+ `(gfw::put-widget (gfw::thread-context) ,menu-bar))
-      (<+ `(setf (gfw:menu-bar ,mirror) ,menu-bar)))
+    ;; (let ((menu-bar (<+ `(make-instance 'gfw-menu :handle (gfs::create-menu)))))
+    ;;   (<+ `(gfw::put-widget (gfw::thread-context) ,menu-bar))
+    ;;   (<+ `(setf (gfw:menu-bar ,mirror) ,menu-bar)))
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
 
@@ -267,9 +266,11 @@
   (render-pending-mediums))
 
 (defmethod make-graft ((port graphic-forms-port) &key (orientation :default) (units :device))
-  (make-instance 'graphic-forms-graft
-                 :port port :mirror (gensym)
-                 :orientation orientation :units units))
+  (let ((result (make-instance 'graphic-forms-graft
+			       :port port :mirror (gensym)
+			       :orientation orientation :units units)))
+    (debug-prin1 result (slot-value result 'climi::mirror))
+    result))
 
 (defmethod make-medium ((port graphic-forms-port) sheet)
   #+nil (gfs::debug-format "creating medium for ~a~%" (class-of sheet))

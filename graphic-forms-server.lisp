@@ -10,13 +10,17 @@
 ;; This must be set, otherwise because thread bindings, directly print to *standard-output* will not display in SLIME.
 (defparameter *graphic-forms-server-debug-output* *standard-output*)
 
+(defparameter *debug-print-lock* (bt:make-recursive-lock "DEBUG-PRINT-LOCK"))
+
 (defun debug-print(&rest args)
-  (when *graphic-forms-server-debug*
-    (format *graphic-forms-server-debug-output* "~{~a~%~}" args)))
+  (bt:with-recursive-lock-held (*debug-print-lock*)
+    (when *graphic-forms-server-debug*
+      (format *graphic-forms-server-debug-output* "~{~a~%~}" args))))
 
 (defun debug-prin1 (&rest args)
-  (when *graphic-forms-server-debug*
-    (format *graphic-forms-server-debug-output* "~{~a ~}~%" args)))
+  (bt:with-recursive-lock-held (*debug-print-lock*)
+    (when *graphic-forms-server-debug*
+      (format *graphic-forms-server-debug-output* "~{~a ~}~%" args))))
 
 (defun start-graphic-forms-server ()
   (or *graphic-forms-server*

@@ -11,4 +11,4 @@
    (:file "gadgets")
    (:file "medium")
    (:file "pixmap")
-   (:file "frame-manager")))
+   (:file "frame-manager2")))

@@ -1,12 +1,11 @@
 (in-package :clim-graphic-forms)
 
-(defclass gf-graft (standard-graft)
-  ())
-
 (defclass graphic-forms-graft (standard-graft)
   ())
 
-(defmethod graft-width ((graft gf-graft) &key (units :device))
+;;; TODO: gf-port-screen not modified back
+(defmethod graft-width ((graft graphic-forms-graft) &key (units :device))
+  (error "not finished")
   (let ((window (gf-port-screen (port graft))))
     (let ((size (<+ `(gfw:size ,window))))
       (with-server-graphics-context (gc window)
@@ -17,7 +16,8 @@
 				(<+ `(gfs::get-device-caps (gfs:handle ,gc) gfs::+logpixelsx+))))
 	  (:screen-sized 1))))))
 
-(defmethod graft-height ((graft gf-graft) &key (units :device))
+(defmethod graft-height ((graft graphic-forms-graft) &key (units :device))
+    (error "not finished")
   (let ((window (gf-port-screen (port graft))))
     (let ((size (<+ `(gfw:size ,window))))
       (with-server-graphics-context (gc window)
