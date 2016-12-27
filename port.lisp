@@ -207,7 +207,7 @@
 ;;;
 
 (defmethod realize-mirror ((port graphic-forms-port) (sheet gf-top-level-sheet-pane))
-  #+nil (gfs::debug-format "realizing ~a~%" (class-of sheet))
+  (debug-prin1 "realize-mirror called on: " sheet)
   (let* ((mirror (<+ `(make-instance 'gfw-top-level
 				     :sheet ,sheet
 				     :dispatcher ,*sheet-dispatcher*
@@ -521,6 +521,7 @@
 			  )))
 
 (defmethod gfw:event-mouse-down ((self sheet-event-dispatcher) mirror point button)
+  (debug-prin1 "mouse-down event")
   (enqueue (port self)
 	   (make-instance 'pointer-button-press-event
 			  :pointer 0

@@ -104,9 +104,11 @@
   ())
 
 (defmethod make-pane-2 ((type (eql 'push-button)) &rest initargs)
+  (debug-prin1 "make-pane-2 called on type: " type)
   (apply #'make-instance 'gf-push-button-pane initargs))
 
-(defmethod realize-mirror ((port graphic-forms-port) (gadget push-button))
+(defmethod realize-mirror ((port graphic-forms-port) (gadget gf-push-button-pane))
+  (debug-prin1 "realize-mirror called on gadget: " gadget)
   (debug-prin1 "realize-mirror called on" gadget)
   (let* ((parent-mirror (sheet-mirror (sheet-parent gadget)))
          (mirror (<+ `(make-instance 'gfw-button
