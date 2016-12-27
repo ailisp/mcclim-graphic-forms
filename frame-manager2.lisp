@@ -1,11 +1,11 @@
 (in-package :clim-graphic-forms)
 
-(defclass graphic-forms-frame-manager (frame-manager)
+(defclass gf-frame-manager (frame-manager)
   ())
 
-(defmethod make-pane-1 ((fm graphic-forms-frame-manager) (frame application-frame) type &rest args)
+(defmethod make-pane-1 ((fm gf-frame-manager) (frame application-frame) type &rest args)
   (apply #'make-instance
-	 (%find-concrete-pane-class fm type)
+	 (%gf-mirror-maybe (%find-concrete-pane-class fm type))
 	 :frame frame
 	 :manager fm
 	 :port (port frame)
@@ -21,3 +21,5 @@
        (if (keywordp type)
 	   (find-class (intern (symbol-name type) :climi))
 	   (find-class type)))))
+
+(defun %gf-mirror-maybe )

@@ -1,5 +1,4 @@
 (in-package :clim-gf)
-
 ;;;
 ;;; (run-frame-top-level (make-application-frame 'buttons))
 ;;;

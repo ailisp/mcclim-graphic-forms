@@ -54,25 +54,6 @@
         do (render-medium-buffer medium))
   (setf *mediums-to-render* nil))
 
-(defun ink-to-color (medium ink)
-  (cond
-    ((subtypep (class-of ink) (find-class 'climi::opacity))
-     (setf ink (medium-foreground medium))) ; see discussion of opacity in design.lisp
-    ((eql ink +foreground-ink+)
-     (setf ink (medium-foreground medium)))
-    ((eql ink +background-ink+)
-     (setf ink (medium-background medium)))
-    ((eql ink +flipping-ink+)
-     (warn "+flipping-ink+ encountered in ink-to-color~%")
-     (setf ink nil)))
-  (if ink
-    (multiple-value-bind (red green blue) (clim:color-rgb ink)
-      (<+ `(gfg:make-color :red ,(min (truncate (* red 256)) 255)
-			   :green ,(min (truncate (* green 256)) 255)
-			   :blue ,(min (truncate (* blue 256)) 255))))
-    (with-server-graphics-context (gc (target-of medium))
-      (<+ `(gfg:background-color ,gc)))))
-
 ;; (defun target-of (medium)
 ;;   (let ((sheet (medium-sheet medium)))
 ;;     (if (climi::pane-double-buffering sheet)
@@ -130,13 +111,8 @@
   nil)
 
 (defun sync-text-style (medium text-style)
-  (print "sync-text-style~~~~" *biu*)
-  (print medium)
-  (print (medium-sheet medium) *biu*)
-  (print (climi::port-lookup-mirror (port-of medium) (medium-sheet medium)))
   (with-server-graphics-context
       (gc (climi::port-lookup-mirror (port-of medium) (medium-sheet medium)))
-    (print 77777 *biu*)
     (let* ((old-data
 	    (when (font-of medium)
 	      (<+ `(gfg:data-object ,(font-of medium) ,gc))))

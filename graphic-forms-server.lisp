@@ -5,6 +5,19 @@
 (defvar *graphic-forms-server-command-queue*
   (lparallel.queue:make-queue))
 
+(defparameter *graphic-forms-server-debug* t)
+
+;; This must be set, otherwise because thread bindings, directly print to *standard-output* will not display in SLIME.
+(defparameter *graphic-forms-server-debug-output* *standard-output*)
+
+(defun debug-print(&rest args)
+  (when *graphic-forms-server-debug*
+    (format *graphic-forms-server-debug-output* "~{~a~%~}" args)))
+
+(defun debug-prin1 (&rest args)
+  (when *graphic-forms-server-debug*
+    (format *graphic-forms-server-debug-output* "~{~a ~}~%" args)))
+
 (defun start-graphic-forms-server ()
   (or *graphic-forms-server*
       (setf *graphic-forms-server*
@@ -29,6 +42,7 @@
        (let ((gm (gfs::peek-message msg-ptr (cffi:null-pointer) 0 0 (logior gfs::+pm-noyield+ gfs::+pm-remove+)))
 	     (command-and-promise (graphic-forms-server-listen)))
 	 (when command-and-promise
+	   (debug-print "Server receive command:" (car command-and-promise))
 	   (graphic-forms-server-read)
 	   (lparallel:fulfill (cdr command-and-promise)
 	     (process-command (car command-and-promise))))
@@ -45,7 +59,6 @@
 
 (defun send-to-graphic-forms-server (command)
   (assert *graphic-forms-server*)
-  (print command *biu*)
   (let ((p (lparallel:promise)))
     (lparallel.queue:push-queue (cons command p) *graphic-forms-server-command-queue*)
     p))
@@ -60,10 +73,19 @@
   `(send-to-graphic-forms-server/blocked ,command))
 
 ;;; TODO: need to examine command and recover from error
+;;; There must be no blocked command send in process-command
 (defun process-command (command)
-  (eval command))
+  (debug-print (bt:current-thread))
+  (case (first command)
+    (gfw:show
+     (debug-print (second command))
+     (gfw:show (second command) (third command))
+     (debug-print "Server show command processed."))
+    (otherwise (let ((result (eval command)))
+		 (debug-print "Server processed command:" command "Result:" result)
+		 result))))
 
-;;; this return should be free via gfs:dispose
+;;; This return should be free via gfs:dispose
 (defun make-graphics-context (&optional thing)
   (cond
     ((null thing)
@@ -91,3 +113,5 @@
        (<- `(gfs:dispose ,,win)))))
 
 (start-graphic-forms-server)
+
+

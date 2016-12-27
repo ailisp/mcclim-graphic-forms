@@ -1,27 +1,5 @@
-;;; -*- Mode: Lisp; Package: CLIM-GRAPHIC-FORMS; -*-
-
-;;; (c) 2006 Jack D. Unrue (jdunrue (at) gmail (dot) com)
-;;; based on the null backend by:
-;;;  (c) 2005 Christophe Rhodes (c.rhodes@gold.ac.uk)
-
-;;; This library is free software; you can redistribute it and/or
-;;; modify it under the terms of the GNU Library General Public
-;;; License as published by the Free Software Foundation; either
-;;; version 2 of the License, or (at your option) any later version.
-;;;
-;;; This library is distributed in the hope that it will be useful,
-;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;;; Library General Public License for more details.
-;;;
-;;; You should have received a copy of the GNU Library General Public
-;;; License along with this library; if not, write to the 
-;;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, 
-;;; Boston, MA  02111-1307  USA.
-
 (in-package :clim-graphic-forms)
 
-(defparameter *biu* *standard-output*)
 (defclass gf-mirror-mixin ()
   ((sheet
     :accessor sheet
@@ -257,10 +235,10 @@
     (<- `(gfs:dispose ,mirror))))
 
 (defmethod port-enable-sheet ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
-  (<+ `(gfw:show ,(climi::port-lookup-mirror port sheet) t)))
+  (<- `(gfw:show ,(climi::port-lookup-mirror port sheet) t)))
 
 (defmethod port-disable-sheet ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
-  (<+ `(gfw:show ,(climi::port-lookup-mirror port sheet) nil)))
+  (<- `(gfw:show ,(climi::port-lookup-mirror port sheet) nil)))
 
 (defmethod destroy-port :before ((port graphic-forms-port))
   ())
@@ -431,6 +409,7 @@
 
 ;;; This function should only be called in graphics-forms-server thread
 (defun ink-to-color (medium ink)
+  (debug-print "blbobobobobo")
   (cond
     ((subtypep (class-of ink) (find-class 'climi::opacity))
      (setf ink (medium-foreground medium))) ; see discussion of opacity in design.lisp
@@ -441,18 +420,22 @@
     ((eql ink +flipping-ink+)
      (warn "+flipping-ink+ encountered in ink-to-color~%")
      (setf ink nil)))
+  (debug-prin1 "kkkkkkkkk")
   (if ink
-    (multiple-value-bind (red green blue) (clim:color-rgb ink)
-      (gfg:make-color :red (min (truncate (* red 256)) 255)
-		      :green (min (truncate (* green 256)) 255)
-		      :blue (min (truncate (* blue 256)) 255)))
-    (with-server-graphics-context (gc (target-of medium))
-      (gfg:background-color gc))))
+      (multiple-value-bind (red green blue) (clim:color-rgb ink)
+	(gfg:make-color :red (min (truncate (* red 256)) 255)
+			:green (min (truncate (* green 256)) 255)
+			:blue (min (truncate (* blue 256)) 255)))
+      (progn (debug-prin1 "nononono")
+       (with-server-graphics-context (gc (target-of medium))
+	 (gfg:background-color gc)))))
 
 (defmethod gfw:event-paint ((self sheet-event-dispatcher) mirror gc rect)
   (let ((sheet (sheet mirror)))
     (when (and (typep sheet 'sheet-with-medium-mixin)
                (not (image-of (sheet-medium sheet))))
+      (debug-print "~~~~~~~~~~~")
+      (debug-print(ink-to-color (sheet-medium sheet) (sheet-desired-ink sheet)))
       (let ((c (ink-to-color (sheet-medium sheet)
                              (sheet-desired-ink sheet))))
         (setf (gfg:background-color gc) c
@@ -465,7 +448,6 @@
 
 ;;; This function should only be called in graphics-forms-server thread
 (defun generate-configuration-event (mirror pnt size)
-  (print 666 *biu*)
   (make-instance 'window-configuration-event
                  :sheet (sheet mirror)
                  :x (gfs:point-x pnt)
@@ -475,8 +457,6 @@
 
 (defmethod gfw:event-resize ((self sheet-event-dispatcher) mirror size type)
   (declare (ignore type))
-  (print "~~~~~~~~~~~event-resize" *biu*)
-  (print (bt:current-thread) *biu*)
   (setf size (gfw:client-size mirror))
   (let ((sheet (sheet mirror)))
     (if (and sheet (subtypep (class-of sheet) 'sheet-with-medium-mixin))
@@ -484,12 +464,9 @@
           (when (and medium (image-of medium))
             (resize-medium-buffer medium size)))))
   (enqueue (port self)
-           (generate-configuration-event mirror (gfw:location mirror) size))
-  (print "~~~end-event-resize" *biu*))
+           (generate-configuration-event mirror (gfw:location mirror) size)))
 
 (defmethod gfw:event-move ((self sheet-event-dispatcher) mirror pnt)
-  (print "~~~~~~~~~~~~event-move" *biu*)
-  (print (bt:current-thread) *biu*)
   (enqueue (port self)
            (generate-configuration-event mirror pnt (gfw:client-size mirror))))
 
@@ -497,7 +474,6 @@
 (defclass button-pressed-event (gadget-event) ())
 
 (defmethod gfw:event-select ((self pane-event-dispatcher) mirror)
-  (print 8888888888 *biu*)
   (enqueue (port self)
 	   (typecase mirror
 	     (gfw-button
@@ -518,9 +494,6 @@
 ;; 			     :item (sheet mirror))))))
 
 (defmethod handle-event ((pane push-button) (event button-pressed-event))
-  (print pane *biu*)
-  (print (gadget-client pane) *biu*)
-  (print (gadget-id pane) *biu*)
   (activate-callback pane (gadget-client pane) (gadget-id pane)))
 
 (defun translate-button-name (name)
@@ -548,7 +521,6 @@
 			  )))
 
 (defmethod gfw:event-mouse-down ((self sheet-event-dispatcher) mirror point button)
-  (print 777777777 *biu*)
   (enqueue (port self)
 	   (make-instance 'pointer-button-press-event
 			  :pointer 0

@@ -1,6 +1,6 @@
 MCCLIM-GRAPHIC-FORMS
 
-Copyright (C) 2016, Bo Yao <icerove@gmail.com>
+Copyright (C) 2016 Bo Yao <icerove@gmail.com>
 Copyright (C) 2006 Jack D. Unrue (jdunrue (at) gmail (dot) com)
 Based on the null backend by:
 Copyright (C) 2005 Christophe Rhodes (c.rhodes@gold.ac.uk)
