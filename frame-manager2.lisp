@@ -1,8 +1,12 @@
 (in-package :clim-graphic-forms)
 
+;;; note that the %mirror-map of this non-native frame manager also includes lots of gadget classes,
+;;; because the push-button-pane must be a standard-full-mirrored-sheet-mixin's subclass to be drawn
+;;; correctly
 (defclass graphic-forms-frame-manager (frame-manager)
   ((%mirror-map :reader mirror-map
-		:initform '((climi::top-level-sheet-pane . graphic-forms-top-level-sheet-pane))
+		:initform '((climi::top-level-sheet-pane . graphic-forms-top-level-sheet-pane)
+			    (push-button-pane . graphic-forms-push-button-pane))
 		:allocation :class))
   (:documentation "The portable look and feel frame manager on Windows. Only top level window is mirrored to Windows native top levelwindow, all gadgets are portable CLIM implementation created by draw-*"))
 

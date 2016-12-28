@@ -101,8 +101,9 @@
 ;;;
 
 ;;; This is unscientific, should avoid
-;; (defclass graphic-forms-push-button-pane (standard-full-mirrored-sheet-mixin climi::push-button-pane)
-;;   ())
+(defclass graphic-forms-push-button-pane (standard-full-mirrored-sheet-mixin 
+					  climi::push-button-pane)
+  ())
 
 ;; (defmethod make-pane-2 ((type (eql 'push-button)) &rest initargs)
 ;;   (debug-prin1 "make-pane-2 called on type: " type)

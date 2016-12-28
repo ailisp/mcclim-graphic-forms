@@ -1,1 +1,2 @@
 double-buffering should be backend specific or in climi?
+draw-text seems questionable without mirrored-sheet-mixin
