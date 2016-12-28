@@ -5,14 +5,12 @@
 ;;; correctly
 (defclass graphic-forms-frame-manager (frame-manager)
   ((%mirror-map :reader mirror-map
-		:initform '((climi::top-level-sheet-pane . graphic-forms-top-level-sheet-pane)
-			    (push-button-pane . graphic-forms-push-button-pane))
+		:initform *graphic-forms-pane-class-map*
 		:allocation :class))
   (:documentation "The portable look and feel frame manager on Windows. Only top level window is mirrored to Windows native top levelwindow, all gadgets are portable CLIM implementation created by draw-*"))
 
-;;; TODO: add %mirror-map just as graphic-forms-frame-manager
 (defclass graphic-forms-native-frame-manager (graphic-froms-frame-manager)
-  ()
+  ((%mirror-map :initform *graphic-forms-native-pane-class-map*))
   (:documentation "The Windows native look and feel frame manager. All CLIM gadgets are mirrored to Windows native ones."))
 
 (defmethod make-pane-1 ((fm graphic-forms-frame-manager) (frame application-frame) type &rest args)
