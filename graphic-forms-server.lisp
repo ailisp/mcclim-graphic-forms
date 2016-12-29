@@ -5,6 +5,9 @@
 (defvar *graphic-forms-server-command-queue*
   (lparallel.queue:make-queue))
 
+(defvar *graphic-forms-server-event-queue*
+  (lparallel.queue:make-queue))
+
 (defparameter *graphic-forms-server-debug* t)
 
 ;; This must be set, otherwise because thread bindings, directly print to *standard-output* will not display in SLIME.
@@ -118,4 +121,8 @@
 
 (start-graphic-forms-server)
 
+(defun server-add-event (event)
+  (lparallel.queue:push-queue event *graphic-forms-server-event-queue*))
 
+(defun server-get-event ()
+  (lparallel.queue:pop-queue *graphic-forms-server-event-queue*))

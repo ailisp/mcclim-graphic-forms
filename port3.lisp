@@ -36,9 +36,9 @@
 
 ;;; This function should only be called in graphic-forms-server thread
 (defun enqueue (port event)
+  (declare (ignore port))
   (setf (slot-value event 'climi::timestamp) (gfw:obtain-event-time))
-;  (push event (events port))
-  )
+  (server-add-event event))
 
 (defvar *sheet-dispatcher* (<+ `(make-instance 'sheet-event-dispatcher)))
 
@@ -152,7 +152,8 @@
   value)
 
 (defmethod get-next-event ((port graphic-forms-port) &key wait-function (timeout nil))
-  ())
+  (declare (ignore wait-function timeout))
+  (server-get-event))
 
 (defmethod process-next-event :after ((port graphic-forms-port) &key wait-function (timeout nil))
   (declare (ignore wait-function timeout))
