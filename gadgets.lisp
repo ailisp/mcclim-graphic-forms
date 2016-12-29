@@ -100,13 +100,18 @@
 ;;; other gadgets
 ;;;
 
+(defmacro %generate-graphic-forms-pane-classes (pane-map)
+  `(progn
+     ,@(mapcar (lambda (concrete-pane-class-name)
+		 (%expand-define-graphic-forms-pane-class concrete-pane-class-name pane-map))
+	       *clim-concrete-pane-class*)))
 
-
-
-(defclass graphic-forms-push-button-pane (standard-full-mirrored-sheet-mixin 
-					  climi::push-button-pane)
-  ())
-
+;;; generate all clim concrete pane class like this:
+;; (defclass graphic-forms-push-button-pane (standard-full-mirrored-sheet-mixin 
+;; 					  climi::push-button-pane)
+;;   ())
+(%generate-graphic-forms-pane-classes #.*graphic-forms-pane-class-map*)
+(%generate-graphic-forms-pane-classes #.*graphic-forms-native-pane-class-map*)
 
 
 ;; (defmethod make-pane-2 ((type (eql 'push-button)) &rest initargs)
