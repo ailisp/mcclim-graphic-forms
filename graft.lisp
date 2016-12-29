@@ -6,7 +6,7 @@
 ;;; TODO: gf-port-screen not modified back
 (defmethod graft-width ((graft graphic-forms-graft) &key (units :device))
   (error "not finished")
-  (let ((window (gf-port-screen (port graft))))
+  (let ((window (graphic-forms-port-screen (port graft))))
     (let ((size (<+ `(gfw:size ,window))))
       (with-server-graphics-context (gc window)
 	(ecase units
@@ -18,7 +18,7 @@
 
 (defmethod graft-height ((graft graphic-forms-graft) &key (units :device))
     (error "not finished")
-  (let ((window (gf-port-screen (port graft))))
+  (let ((window (graphic-forms-port-screen (port graft))))
     (let ((size (<+ `(gfw:size ,window))))
       (with-server-graphics-context (gc window)
 	(ecase units

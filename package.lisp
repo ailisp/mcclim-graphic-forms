@@ -9,4 +9,5 @@
 		:sheet-mirror-region
 		:standard-graft
 		:standard-event-port-mixin
+		:standard-port
 		:pointer-grab-sheet))
