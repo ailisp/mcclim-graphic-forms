@@ -443,7 +443,8 @@
 	      (y (floor y)))
 	  (<+ `(gfg:draw-text ,gc
 			      ,(subseq string start (or end (length string)))
-			      (gfs:make-point :x ,x :y ,(- y ascent)))))))
+			      (gfs:make-point :x ,x :y ,(- y ascent))
+			      '(:transparent))))))
     (add-medium-to-render medium)))
 
 (defmethod medium-buffering-output-p ((medium graphic-forms-medium))

@@ -144,6 +144,9 @@
 (defclass gfw-panel (gfw:panel gf-mirror-mixin) ()
   (:documentation "Server side gadgets"))
 
+(defmethod initialize-instance :after ((panel gfw-panel) &rest initargs)
+  (gfs::set-bk-mode (gfs:handle panel) gfs::+transparent+))
+
 (defclass sheet-event-dispatcher (gfw:event-dispatcher)
   ((port
     :accessor port
