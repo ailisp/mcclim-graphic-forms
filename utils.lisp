@@ -40,7 +40,8 @@
     generic-list-pane
     generic-option-pane
     text-field-pane
-    text-editor-pane))
+    text-editor-pane
+    vrack-pane)) ;TODO add other layout panes
 
 (defun %make-pane-class-map (infix)
   (acons 'climi::top-level-sheet-pane 'graphic-forms-top-level-sheet-pane
