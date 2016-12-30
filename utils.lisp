@@ -41,7 +41,18 @@
     generic-option-pane
     text-field-pane
     text-editor-pane
-    vrack-pane)) ;TODO add other layout panes
+    hbox-pane
+    vbox-pane
+    hrack-pane
+    vrack-pane
+    table-pane
+    grid-pane
+    spacing-pane
+    outlined-pane
+    restraining-pane   
+    bboard-pane
+    label-pane
+    scroller-pane))
 
 (defun %make-pane-class-map (infix)
   (acons 'climi::top-level-sheet-pane 'graphic-forms-top-level-sheet-pane

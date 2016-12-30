@@ -125,9 +125,7 @@
 
 (defmethod get-next-event ((port graphic-forms-port) &key wait-function (timeout nil))
   (declare (ignore wait-function timeout))
-  (let ((event (server-get-event)))
-    (debug-print "get-next-event" event)
-    event))
+  (server-get-event))
 
 (defmethod process-next-event :after ((port graphic-forms-port) &key wait-function (timeout nil))
   (declare (ignore wait-function timeout))

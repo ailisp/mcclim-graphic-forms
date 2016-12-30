@@ -127,7 +127,6 @@
 
 (defun server-add-event (event)
   (setf (slot-value event 'climi::timestamp) (gfw:obtain-event-time))
-  (debug-print "Server add event" event)
   (lparallel.queue:push-queue event *graphic-forms-server-event-queue*))
 
 (defun server-get-event ()
