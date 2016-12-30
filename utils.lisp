@@ -52,7 +52,9 @@
     restraining-pane   
     bboard-pane
     label-pane
-    scroller-pane))
+    scroller-pane
+    
+    climi::viewport-pane))
 
 (defun %make-pane-class-map (infix)
   (acons 'climi::top-level-sheet-pane 'graphic-forms-top-level-sheet-pane
@@ -72,4 +74,10 @@
 (defun %expand-define-graphic-forms-pane-class (concrete-pane-class-name pane-map)
   `(defclass ,(cdr (assoc concrete-pane-class-name pane-map)) (standard-full-mirrored-sheet-mixin
 		  ,concrete-pane-class-name)
+     ()))
+
+(defun %expand-define-graphic-forms-medium-pane-class (concrete-pane-class-name pane-map)
+  `(defclass ,(cdr (assoc concrete-pane-class-name pane-map)) (standard-full-mirrored-sheet-mixin
+							       permanent-medium-sheet-output-mixin
+							       ,concrete-pane-class-name)
      ()))

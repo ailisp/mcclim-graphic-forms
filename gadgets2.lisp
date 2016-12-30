@@ -3,7 +3,9 @@
 (defmacro %generate-graphic-forms-pane-classes (pane-map)
   `(progn
      ,@(mapcar (lambda (concrete-pane-class-name)
-		 (%expand-define-graphic-forms-pane-class concrete-pane-class-name pane-map))
+		 (if (subtypep concrete-pane-class-name 'sheet-with-medium-mixin)
+		     (%expand-define-graphic-forms-pane-class concrete-pane-class-name pane-map)
+		     (%expand-define-graphic-forms-medium-pane-class concrete-pane-class-name pane-map)))
 	       *clim-concrete-pane-class*)))
 
 ;;; generate all clim concrete pane class like this:
