@@ -45,8 +45,7 @@
                   "Restart CLIM's event loop.")
     		  (loop
     		     (process-next-event port)))))
-    	   :name (format nil "~S's event process." port))))
-  (debug-print "initialize-instance graphic-forms port finished"))
+    	   :name (format nil "~S's event process." port)))))
 
 ;;;
 ;;; mirror methods

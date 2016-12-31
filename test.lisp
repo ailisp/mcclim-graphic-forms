@@ -9,3 +9,9 @@
     (default
       (vertically (:equalize-width t)
         (make-pane 'push-button :label "First")))))
+
+(defmethod clim:activate-callback
+    ((button clim:push-button) client gadget-id)
+  (with-slots (output-pane) client
+    (format output-pane "The button ~S was pressed, client ~S, id ~S."
+	    button client gadget-id)))

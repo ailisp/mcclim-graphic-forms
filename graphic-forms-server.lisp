@@ -161,7 +161,8 @@
 
 (defmethod gfw:event-close ((self sheet-event-dispatcher) mirror)
   (server-add-event
-   (make-instance 'window-manager-delete-event :sheet (sheet mirror))))
+   (make-instance 'window-manager-delete-event :sheet (sheet mirror)))
+  (debug-print "666666666666666"))
 
 ;; copy&paste from port.lisp|CLX:
 (defun sheet-desired-ink (sheet)
@@ -179,7 +180,6 @@
 
 ;;; This function should only be called in graphics-forms-server thread
 (defun ink-to-color (medium ink)
-  (debug-print "blbobobobobo")
   (cond
     ((subtypep (class-of ink) (find-class 'climi::opacity))
      (setf ink (medium-foreground medium))) ; see discussion of opacity in design.lisp
@@ -190,7 +190,6 @@
     ((eql ink +flipping-ink+)
      (warn "+flipping-ink+ encountered in ink-to-color~%")
      (setf ink nil)))
-  (debug-prin1 "kkkkkkkkk")
   (if ink
       (multiple-value-bind (red green blue) (clim:color-rgb ink)
 	(gfg:make-color :red (min (truncate (* red 256)) 255)
@@ -334,3 +333,4 @@
 ;;; 			 :graft-x root-x
 ;;; 			 :graft-y root-y
 		  )))
+
