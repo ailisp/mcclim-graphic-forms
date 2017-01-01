@@ -334,5 +334,22 @@
 ;;; 			 :graft-y root-y
 		  )))
 
+(defmethod gfw:event-mouse-enter ((self sheet-event-dispatcher) mirror point button)
+  (server-add-event
+   (make-instance 'pointer-enter-event
+		  :pointer 0
+		  :sheet (sheet mirror)
+		  :x (gfs:point-x point)
+		  :y (gfs:point-y point)
+		  :button (translate-button-name button)
+		  :modifier-state 0)))
 
-
+(defmethod gfw:event-mouse-exit ((self sheet-event-dispatcher) mirror point button)
+  (server-add-event
+   (make-instance 'pointer-exit-event
+		  :pointer 0
+		  :sheet (sheet mirror)
+		  :x (gfs:point-x point)
+		  :y (gfs:point-y point)
+		  :button (translate-button-name button)
+		  :modifier-state 0)))
