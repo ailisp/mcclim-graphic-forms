@@ -14,7 +14,6 @@
   (:documentation "The Windows native look and feel frame manager. All CLIM gadgets are mirrored to Windows native ones."))
 
 (defmethod make-pane-1 ((fm graphic-forms-frame-manager) (frame application-frame) type &rest args)
-  (debug-print "make-pane-1" "origin" type "map to" (%maybe-mirror fm (%find-concrete-pane-class type)))
   (apply #'make-instance
 	 (%maybe-mirror fm (%find-concrete-pane-class type))
 	 :frame frame

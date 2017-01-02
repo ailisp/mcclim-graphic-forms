@@ -82,7 +82,6 @@
 ;;;
 
 (defmethod realize-mirror ((port graphic-forms-port) (sheet graphic-forms-top-level-sheet-pane))
-  (debug-prin1 "realize-mirror called on: " sheet)
   (let* ((mirror (<+ `(make-instance 'gfw-top-level
 				     :sheet ,sheet
 				     :dispatcher ,*sheet-dispatcher*
@@ -134,7 +133,6 @@
   (let ((result (make-instance 'graphic-forms-graft
 			       :port port :mirror (gensym)
 			       :orientation orientation :units units)))
-    (debug-prin1 "make-graft" result (slot-value result 'climi::mirror))
     result))
 
 (defmethod make-medium ((port graphic-forms-port) sheet)

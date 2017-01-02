@@ -206,7 +206,6 @@
 ;;;
 
 (defmethod realize-mirror ((port graphic-forms-port) (sheet graphic-forms-top-level-sheet-pane))
-  (debug-prin1 "realize-mirror called on: " sheet)
   (let* ((mirror (<+ `(make-instance 'gfw-top-level
 				     :sheet ,sheet
 				     :dispatcher ,*sheet-dispatcher*

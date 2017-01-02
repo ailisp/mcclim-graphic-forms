@@ -53,7 +53,6 @@
        (let ((gm (gfs::peek-message msg-ptr (cffi:null-pointer) 0 0 (logior gfs::+pm-noyield+ gfs::+pm-remove+)))
 	     (command-and-promise (graphic-forms-server-listen)))
 	 (when command-and-promise
-	   (debug-print "Server receive command:" (car command-and-promise))
 	   (graphic-forms-server-read)
 	   (lparallel:fulfill (cdr command-and-promise)
 	     (process-command (car command-and-promise))))
@@ -86,14 +85,10 @@
 ;;; TODO: need to examine command and recover from error
 ;;; There must be no blocked command send in process-command
 (defun process-command (command)
-  (debug-print (bt:current-thread))
   (case (first command)
     (gfw:show
-     (debug-print (second command))
-     (gfw:show (second command) (third command))
-     (debug-print "Server show command processed."))
+     (gfw:show (second command) (third command)))
     (otherwise (let ((result (eval command)))
-		 (debug-print "Server processed command:" command "Result:" result)
 		 result))))
 
 ;;; This return should be free via gfs:dispose
@@ -161,8 +156,7 @@
 
 (defmethod gfw:event-close ((self sheet-event-dispatcher) mirror)
   (server-add-event
-   (make-instance 'window-manager-delete-event :sheet (sheet mirror)))
-  (debug-print "666666666666666"))
+   (make-instance 'window-manager-delete-event :sheet (sheet mirror))))
 
 ;; copy&paste from port.lisp|CLX:
 (defun sheet-desired-ink (sheet)
@@ -203,8 +197,6 @@
   (let ((sheet (sheet mirror)))
     (when (and (typep sheet 'sheet-with-medium-mixin)
                (not (image-of (sheet-medium sheet))))
-      (debug-print "~~~~~~~~~~~")
-      (debug-print(ink-to-color (sheet-medium sheet) (sheet-desired-ink sheet)))
       (let ((c (ink-to-color (sheet-medium sheet)
                              (sheet-desired-ink sheet))))
         (setf (gfg:background-color gc) c
@@ -263,7 +255,7 @@
 		  :modifier-state 0)))
 
 (defmethod gfw:event-mouse-down ((self sheet-event-dispatcher) mirror point button)
-  (debug-prin1 "mouse-down event")
+  (debug-prin1 "mouse down" mirror button)
   (server-add-event 
    (make-instance 'pointer-button-press-event
 		  :pointer 0
@@ -277,6 +269,7 @@
 		  :modifier-state 0)))
 
 (defmethod gfw:event-mouse-up ((self sheet-event-dispatcher) mirror point button)
+  (debug-prin1 "mouse-up" mirror button)
   (server-add-event 
    (make-instance 'pointer-button-release-event
 		  :pointer 0
@@ -321,7 +314,7 @@
 		  )))
 
 (defmethod gfw:event-key-up ((self sheet-event-dispatcher) mirror code char)
-  (server-add-event
+  (server-add-eventa
    (make-instance 'key-release-event
 		  :key-name (char-to-sym char)
 		  :key-character char
@@ -335,6 +328,7 @@
 		  )))
 
 (defmethod gfw:event-mouse-enter ((self sheet-event-dispatcher) mirror point button)
+  (debug-prin1 "mouse-enter" mirror button)
   (server-add-event
    (make-instance 'pointer-enter-event
 		  :pointer 0
@@ -345,6 +339,7 @@
 		  :modifier-state 0)))
 
 (defmethod gfw:event-mouse-exit ((self sheet-event-dispatcher) mirror point button)
+  (debug-prin1 "mouse-exit" mirror button)
   (server-add-event
    (make-instance 'pointer-exit-event
 		  :pointer 0

@@ -91,7 +91,6 @@
   nil)
 
 (defun sync-text-style (medium text-style)
-  (debug-print "sync-text-style" "!!!" medium "!!!" (port-of medium) "!!!" (medium-sheet medium) "!!!" (climi::port-lookup-mirror (port-of medium) (medium-sheet medium)))
   (with-server-graphics-context
       (gc (climi::port-lookup-mirror (port-of medium) (medium-sheet medium)))
     (let* ((old-data
