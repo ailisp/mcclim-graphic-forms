@@ -8,6 +8,11 @@
 (defvar *graphic-forms-server-event-queue*
   (lparallel.queue:make-queue))
 
+(defvar *graphic-forms-mouse-down-sheet* nil
+  "Windows' mouse-up event is different with X's mouse-release event that the window mouse-up happens is the window
+that user release the mouse, in X it's always the previous window mouse-press (mouse-down) event happens. So we need
+to track this information manually.")
+
 (defparameter *graphic-forms-server-debug* t)
 
 ;; This must be set, otherwise because thread bindings, directly print to *standard-output* will not display in SLIME.
@@ -256,10 +261,11 @@
 
 (defmethod gfw:event-mouse-down ((self sheet-event-dispatcher) mirror point button)
   (debug-prin1 "mouse down" mirror button)
+  (setf *graphic-forms-mouse-down-sheet* (sheet mirror))
   (server-add-event 
    (make-instance 'pointer-button-press-event
 		  :pointer 0
-		  :sheet (sheet mirror)
+		  :sheet *graphic-forms-mouse-down-sheet*
 		  :x (gfs:point-x point)
 		  :y (gfs:point-y point)
 		  :button (translate-button-name button)
@@ -273,14 +279,15 @@
   (server-add-event 
    (make-instance 'pointer-button-release-event
 		  :pointer 0
-		  :sheet (sheet mirror)
+		  :sheet *graphic-forms-mouse-down-sheet*
 		  :x (gfs:point-x point)
 		  :y (gfs:point-y point)
 		  :button (translate-button-name button)
 		  ;; FIXME:
 ;;; 		       :graft-x
 ;;; 		       :graft-y
-		  :modifier-state 0)))
+		  :modifier-state 0))
+  (setf *graphic-forms-mouse-down-sheet* nil))
 
 (defun char-to-sym (char)
   (case char
