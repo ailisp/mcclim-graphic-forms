@@ -61,10 +61,6 @@
 	     (gfs:make-size :width ,(floor (bounding-rectangle-width region))
 			    :height ,(floor (bounding-rectangle-height region))))))
 
-(defmethod port-set-mirror-transformation ((port graphic-forms-port) (mirror gfw-top-level) transformation)
-  ;; FIXME: does McCLIM really need to set position of top-level window's?
-  ())
-
 (defmethod port-set-mirror-transformation ((port graphic-forms-port) (mirror gf-mirror-mixin) transformation)
   (multiple-value-bind (x y)
       (transform-position transformation 0 0)
@@ -90,12 +86,22 @@
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
 
+;; (defmethod realize-mirror ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
+;;   (let* ((parent (sheet-mirror (sheet-parent sheet)))
+;;          (mirror (<+ `(make-instance 'gfw-panel
+;; 				     :sheet ,sheet
+;; 				     :dispatcher ,*sheet-dispatcher*
+;; 				     :style '()
+;; 				     :parent ,parent))))
+;;     (climi::port-register-mirror (port sheet) sheet mirror)
+;;     mirror))
+
 (defmethod realize-mirror ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
   (let* ((parent (sheet-mirror (sheet-parent sheet)))
          (mirror (<+ `(make-instance 'gfw-panel
 				     :sheet ,sheet
 				     :dispatcher ,*sheet-dispatcher*
-				     :style '() ;was: '(:border)
+				     :style '()
 				     :parent ,parent))))
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
@@ -112,8 +118,10 @@
   (<- `(gfw:show ,(climi::port-lookup-mirror port sheet) nil)))
 
 (defmethod destroy-port :before ((port graphic-forms-port))
-  ())
+  (<+ `(gfs:dispose ,(graphic-forms-port-screen port)))
+  (close-graphic-forms-server))
 
+;This function and (setf port-motion-hints) are performance plus specific to CLX, not useful on Windows
 (defmethod port-motion-hints ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
   ())
 
@@ -136,7 +144,6 @@
     result))
 
 (defmethod make-medium ((port graphic-forms-port) sheet)
-  #+nil (gfs::debug-format "creating medium for ~a~%" (class-of sheet))
   (make-instance 'graphic-forms-medium :port port :sheet sheet))
 
 (defmethod text-style-mapping
@@ -155,12 +162,10 @@
   #+nil (<- `(gfs::debug-format "port-string-width called: ~a ~c~%" ,text-style ,string)))
 
 (defmethod port-mirror-width ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
-  #+nil (<- `(gfs::debug-format "port-mirror-width called for ~a~%" ,sheet))
   (let ((mirror (climi::port-lookup-mirror port sheet)))
     (<+ `(gfs:size-width (gfw:size ,mirror)))))
 
 (defmethod port-mirror-height ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
-  #+nil (<- `(gfs::debug-format "port-mirror-height called for ~a~%" ,sheet))
   (let ((mirror (climi::port-lookup-mirror port sheet)))
     (<+ `(gfs:size-height (gfw:size ,mirror)))))
 
@@ -210,6 +215,7 @@
   ())
 
 (defmethod port-force-output ((port graphic-forms-port))
+  "Sent buffered request to graphic-forms-server, currently all request is not buffered so this is dummy."  
   ())
 
 ;; FIXME: What happens when CLIM code calls tracking-pointer recursively?

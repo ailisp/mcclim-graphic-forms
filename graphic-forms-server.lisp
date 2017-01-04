@@ -141,6 +141,8 @@ to track this information manually.")
 
 (defclass gfw-top-level (gfw:top-level gf-mirror-mixin) ()
   (:documentation "Server side top level window"))
+;; (defclass gfw-panel (gfg:image gf-mirror-mixin) ()
+;;   (:documentation "Server side gadgets"))
 (defclass gfw-panel (gfw:panel gf-mirror-mixin) ()
   (:documentation "Server side gadgets"))
 
@@ -260,7 +262,6 @@ to track this information manually.")
 		  :modifier-state 0)))
 
 (defmethod gfw:event-mouse-down ((self sheet-event-dispatcher) mirror point button)
-  (debug-prin1 "mouse down" mirror button)
   (setf *graphic-forms-mouse-down-sheet* (sheet mirror))
   (server-add-event 
    (make-instance 'pointer-button-press-event
@@ -275,7 +276,6 @@ to track this information manually.")
 		  :modifier-state 0)))
 
 (defmethod gfw:event-mouse-up ((self sheet-event-dispatcher) mirror point button)
-  (debug-prin1 "mouse-up" mirror button)
   (server-add-event 
    (make-instance 'pointer-button-release-event
 		  :pointer 0
@@ -321,7 +321,7 @@ to track this information manually.")
 		  )))
 
 (defmethod gfw:event-key-up ((self sheet-event-dispatcher) mirror code char)
-  (server-add-eventa
+  (server-add-event
    (make-instance 'key-release-event
 		  :key-name (char-to-sym char)
 		  :key-character char
@@ -335,7 +335,6 @@ to track this information manually.")
 		  )))
 
 (defmethod gfw:event-mouse-enter ((self sheet-event-dispatcher) mirror point button)
-  (debug-prin1 "mouse-enter" mirror button)
   (server-add-event
    (make-instance 'pointer-enter-event
 		  :pointer 0
@@ -346,7 +345,6 @@ to track this information manually.")
 		  :modifier-state 0)))
 
 (defmethod gfw:event-mouse-exit ((self sheet-event-dispatcher) mirror point button)
-  (debug-prin1 "mouse-exit" mirror button)
   (server-add-event
    (make-instance 'pointer-exit-event
 		  :pointer 0
