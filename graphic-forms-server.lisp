@@ -149,6 +149,9 @@ to track this information manually.")
 (defmethod initialize-instance :after ((panel gfw-panel) &rest initargs)
   (gfs::set-bk-mode (gfs:handle panel) gfs::+transparent+))
 
+;; (defmethod handle-repaint :before ((sheet standard-full-mirrored-sheet-mixin) region)
+;;   )
+
 (defclass sheet-event-dispatcher (gfw:event-dispatcher)
   ((port
     :accessor port
@@ -203,16 +206,18 @@ to track this information manually.")
 (defmethod gfw:event-paint ((self sheet-event-dispatcher) mirror gc rect)
   (let ((sheet (sheet mirror)))
     (when (and (typep sheet 'sheet-with-medium-mixin)
-               (not (image-of (sheet-medium sheet))))
+;               (not (image-of (sheet-medium sheet)))
+	       )
       (let ((c (ink-to-color (sheet-medium sheet)
                              (sheet-desired-ink sheet))))
+	(debug-prin1 c sheet)
         (setf (gfg:background-color gc) c
               (gfg:foreground-color gc) c))
       (gfg:draw-filled-rectangle gc rect))
     (server-add-event
      (make-instance 'window-repaint-event
-		    :sheet sheet
-		    :region (translate-rectangle rect)))))
+    		    :sheet sheet
+    		    :region (translate-rectangle rect)))))
 
 ;;; This function should only be called in graphics-forms-server thread
 (defun generate-configuration-event (mirror pnt size)

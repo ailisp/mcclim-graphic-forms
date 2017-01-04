@@ -1,14 +1,14 @@
-(in-package :clim-gf)
+(in-package :climi)
 
 (define-application-frame buttons () ()
   (:menu-bar nil)
   (:layouts
    (default
        (vertically ()
-	   (labelling (:label "McCLIM Demos"
-			   :text-style (make-text-style :sans-serif :roman :huge)
+		   (labelling (:label "McCLIM Demos"
+				      :text-style (make-text-style :sans-serif :roman :huge)
 			   :align-x :center))
-;	 (make-pane 'push-button :label "6")
+	 (make-pane 'push-button :label "6")
 	   ))))
 
 

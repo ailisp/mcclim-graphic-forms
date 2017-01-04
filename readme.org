@@ -1,6 +1,13 @@
+** Current Status
 This project intends to fix and continue to finish the uncomplete Graphic-Forms backend for McCLIM.
 Original Graphic-Forms backend for McCLIM 0.9.6 couldn't work because it need to use a Windows message loop to keep the GUI responsive on Windows, while McCLIM needs to have the simple-event-loop to process events. So McCLIM seems to be designed to work with a Client/Server structured GUI toolkit, while Windows native GUI apps are not. So there must be a wrapper to provide Client/Server style to fit in McCLIM's model.
 Changes have been made since McCLIM 0.9.6. The climi::top-level-sheet-pane is not mirrored-sheet-mixin and permanent-medium-sheet-output-mixin any more, thus a new, port specific class for mirrored top level pane is required. Also, many common methods in Backend has been moved to the Standard backend. Therefore, we need to directly use classes as standard-full-mirrored-sheet-mixin, standard-graft to replace the orginal mirrored-sheet-mixin and graft.
 Besides these, Windows' event model is not like X. Some conversion, therefore, must be made in the Graphic-Forms server side.
 McCLIM and CLIM spec are both quite delicated complicated for me. So this project may take time to become fully useable and stable.
-Currently buttons, labels seem works, other gadgets partially work, drawings work. border-pane and menu are not work.
+Currently buttons, labels seem works (although must modify general pane def, other gadgets partially work, drawings work. border-pane and menu are not work.
+
+** Screenshots
+[[./demodemo.png]]
+[[./label-tests.png]]
+[[./calc.png]]
+
