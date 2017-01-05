@@ -146,11 +146,8 @@ to track this information manually.")
 (defclass gfw-panel (gfw:panel gf-mirror-mixin) ()
   (:documentation "Server side gadgets"))
 
-(defmethod initialize-instance :after ((panel gfw-panel) &rest initargs)
-  (gfs::set-bk-mode (gfs:handle panel) gfs::+transparent+))
-
-;; (defmethod handle-repaint :before ((sheet standard-full-mirrored-sheet-mixin) region)
-;;   )
+;; (defmethod initialize-instance :after ((panel gfw-panel) &rest initargs)
+;;   (gfs::set-bk-mode (gfs:handle panel) gfs::+transparent+))
 
 (defclass sheet-event-dispatcher (gfw:event-dispatcher)
   ((port
@@ -210,7 +207,6 @@ to track this information manually.")
 	       )
       (let ((c (ink-to-color (sheet-medium sheet)
                              (sheet-desired-ink sheet))))
-	(debug-prin1 c sheet)
         (setf (gfg:background-color gc) c
               (gfg:foreground-color gc) c))
       (gfg:draw-filled-rectangle gc rect))

@@ -237,6 +237,7 @@
       (add-medium-to-render medium))))
 
 (defmethod medium-draw-rectangle* ((medium graphic-forms-medium) left top right bottom filled)
+  
   (when (target-of medium)
     (with-server-graphics-context (gc (target-of medium))
       (let ((tr (sheet-native-transformation (medium-sheet medium))))
@@ -433,6 +434,9 @@
                      (merge-text-styles (medium-text-style medium)
                                         (medium-default-text-style medium)))
     (setf string (normalize-text-data string))
+    ;; (debug-prin1 medium (medium-ink medium) (medium-clipping-region medium) (medium-transformation medium)
+    ;; 		 (medium-line-style medium) (medium-text-style medium))
+    (debug-prin1 medium (medium-background medium) (medium-foreground medium))
     (with-server-graphics-context (gc (target-of medium))
       (let ((font (font-of medium)))
 	(if font

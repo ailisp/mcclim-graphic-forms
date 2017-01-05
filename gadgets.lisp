@@ -173,3 +173,8 @@
         (setf mirror nil)))
     (make-space-requirement :width (<+ `(gfs:size-width ,pref-size))
                             :height (<+ `(gfs:size-height ,pref-size)))))
+
+(defmethod handle-repaint :before ((pane graphic-forms-label-pane) region)
+  (debug-prin1 "handle-repaint label-pane")
+  (with-bounding-rectangle* (x1 y1 x2 y2) (sheet-region pane) 
+    (draw-rectangle* pane x1 y1 x2 y2 :filled t :ink +background-ink+)))
