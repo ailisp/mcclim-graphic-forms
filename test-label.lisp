@@ -5,10 +5,16 @@
   (:layouts
    (default
        (vertically ()
-		   (labelling (:label "McCLIM Demos"
-				      :text-style (make-text-style :sans-serif :roman :huge)
-			   :align-x :center))
-	 (make-pane 'push-button :label "6")
+		   (labelling (:label "MMMM"
+				      :text-style
+				      (make-text-style :sans-serif :roman :huge)
+				      :align-x :center)
+		     (make-pane 'push-button :label "MMMM" :text-style
+				      (make-text-style :sans-serif :roman :huge)
+))
+	 (make-pane 'push-button :label "MMMM" :text-style
+				      (make-text-style :sans-serif :roman :huge)
+)
 	   ))))
 
 

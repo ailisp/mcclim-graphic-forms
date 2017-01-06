@@ -400,11 +400,14 @@
       1)))
 
 (defmethod text-size ((medium graphic-forms-medium) string &key text-style (start 0) end)
+  (debug-prin1 "text-size" "text-style" text-style)
+  (unless text-style
+    (setf text-style (medium-text-style medium)))
   (setf string (normalize-text-data string))
-  (setf text-style (or text-style (make-text-style nil nil nil)))
   (setf text-style
         (merge-text-styles text-style (medium-default-text-style medium)))
   (sync-text-style medium text-style)
+
   (with-server-graphics-context (gc (target-of medium))
     (let ((font (font-of medium)))
       (<+ `(setf (gfg:font ,gc) ,font))
@@ -412,6 +415,12 @@
 	    (extent (<+ `(gfg:text-extent ,gc ,(subseq string
 						  start
 						  (or end (length string)))))))
+	(debug-prin1 "text-size"
+		     (<+ `(gfs:size-width ,extent))
+		     (<+ `(gfg:height ,metrics))
+		     (<+ `(gfs:size-width ,extent))
+		     (<+ `(gfg:height ,metrics))
+		     (<+ `(gfg:ascent ,metrics)))
 	(values (<+ `(gfs:size-width ,extent))
 		(<+ `(gfg:height ,metrics))
 		(<+ `(gfs:size-width ,extent))
@@ -438,12 +447,17 @@
     ;; 		 (medium-line-style medium) (medium-text-style medium))
     (debug-prin1 medium (medium-background medium) (medium-foreground medium))
     (with-server-graphics-context (gc (target-of medium))
-      (let ((font (font-of medium)))
+      (let ((font (font-of medium))
+	    (color (ink-to-color medium (medium-ink medium)))
+	    (background (ink-to-color medium +background-ink+))) ;ink-to-color here is questionable? server thread color obj?
+	(<+ `(setf (gfg:background-color ,gc) ,background 
+		   (gfg:foreground-color ,gc) ,color))
 	(if font
 	    (<+ `(setf (gfg:font ,gc) ,font)))
 	(let ((ascent (<+ `(gfg:ascent (gfg:metrics ,gc ,font))))
 	      (x (floor x))
 	      (y (floor y)))
+	  (debug-prin1 (<+ `(gfg::foreground-color ,gc)) (<+ `(gfg::background-color ,gc)))
 	  (<+ `(gfg:draw-text ,gc
 			      ,(subseq string start (or end (length string)))
 			      (gfs:make-point :x ,x :y ,(- y ascent))
