@@ -12,9 +12,9 @@
 		     (make-pane 'push-button :label "MMMM" :text-style
 				      (make-text-style :sans-serif :roman :huge)
 ))
-	 (make-pane 'push-button :label "MMMM" :text-style
-				      (make-text-style :sans-serif :roman :huge)
-)
+	 ;; (make-pane 'push-button :label "MMMM" :text-style
+;; 				      (make-text-style :sans-serif :roman :huge)
+;; )
 	   ))))
 
 

@@ -237,7 +237,7 @@
       (add-medium-to-render medium))))
 
 (defmethod medium-draw-rectangle* ((medium graphic-forms-medium) left top right bottom filled)
-  
+  (debug-prin1 (medium-clipping-region medium))
   (when (target-of medium)
     (with-server-graphics-context (gc (target-of medium))
       (let ((tr (sheet-native-transformation (medium-sheet medium))))
@@ -400,7 +400,6 @@
       1)))
 
 (defmethod text-size ((medium graphic-forms-medium) string &key text-style (start 0) end)
-  (debug-prin1 "text-size" "text-style" text-style)
   (unless text-style
     (setf text-style (medium-text-style medium)))
   (setf string (normalize-text-data string))
@@ -415,12 +414,6 @@
 	    (extent (<+ `(gfg:text-extent ,gc ,(subseq string
 						  start
 						  (or end (length string)))))))
-	(debug-prin1 "text-size"
-		     (<+ `(gfs:size-width ,extent))
-		     (<+ `(gfg:height ,metrics))
-		     (<+ `(gfs:size-width ,extent))
-		     (<+ `(gfg:height ,metrics))
-		     (<+ `(gfg:ascent ,metrics)))
 	(values (<+ `(gfs:size-width ,extent))
 		(<+ `(gfg:height ,metrics))
 		(<+ `(gfs:size-width ,extent))
@@ -443,9 +436,6 @@
                      (merge-text-styles (medium-text-style medium)
                                         (medium-default-text-style medium)))
     (setf string (normalize-text-data string))
-    ;; (debug-prin1 medium (medium-ink medium) (medium-clipping-region medium) (medium-transformation medium)
-    ;; 		 (medium-line-style medium) (medium-text-style medium))
-    (debug-prin1 medium (medium-background medium) (medium-foreground medium))
     (with-server-graphics-context (gc (target-of medium))
       (let ((font (font-of medium))
 	    (color (ink-to-color medium (medium-ink medium)))
@@ -457,7 +447,6 @@
 	(let ((ascent (<+ `(gfg:ascent (gfg:metrics ,gc ,font))))
 	      (x (floor x))
 	      (y (floor y)))
-	  (debug-prin1 (<+ `(gfg::foreground-color ,gc)) (<+ `(gfg::background-color ,gc)))
 	  (<+ `(gfg:draw-text ,gc
 			      ,(subseq string start (or end (length string)))
 			      (gfs:make-point :x ,x :y ,(- y ascent))
