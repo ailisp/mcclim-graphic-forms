@@ -1,2 +1,2 @@
-double-buffering should be backend specific or in climi?
-draw-text seems questionable without mirrored-sheet-mixin
+Sometimes window should be fixed sized and don't allow user to resize;
+when two window show up, first close the parent one will cause gf-server get frozen
