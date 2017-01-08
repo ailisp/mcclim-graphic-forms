@@ -10,7 +10,11 @@
    (port ; this seems surplus
     :accessor port-of
     :initarg :port
-    :initform nil)))
+    :initform nil)
+   ;;; Copy from CLX
+   (clipping-region-tmp :initform (vector 0 0 0 0)
+     :documentation "This object is reused to avoid consing in the
+ most common case when configuring the clipping region.")))
 
 (defvar *medium-origin*     (<+ `(gfs:make-point)))
 (defvar *mediums-to-render* nil)
@@ -45,7 +49,7 @@
 ;; 	(sheet-mirror (medium-sheet medium)))))
 
 
-;;; For gf-toplevel-sheet-pane, the sheet-region is incorrect, it should be modify to the
+;;; FIXME: For gf-toplevel-sheet-pane, the sheet-region is incorrect, it should be modify to the
 ;;; actual window size in apropriate place
 (defun target-of (medium)
   (let ((sheet (medium-sheet medium)))
@@ -222,6 +226,7 @@
 (defmethod medium-draw-polygon* ((medium graphic-forms-medium) coord-seq closed filled)
   (when (target-of medium)
     (with-server-graphics-context (gc (target-of medium))
+      (%set-gc-clipping-region medium gc)
       (climi::with-transformed-positions
 	  ((sheet-native-transformation (medium-sheet medium)) coord-seq)
 	(let ((points-list (coordinates->points coord-seq))
@@ -237,7 +242,7 @@
       (add-medium-to-render medium))))
 
 (defmethod medium-draw-rectangle* ((medium graphic-forms-medium) left top right bottom filled)
-  (debug-prin1 (medium-clipping-region medium))
+
   (when (target-of medium)
     (with-server-graphics-context (gc (target-of medium))
       (let ((tr (sheet-native-transformation (medium-sheet medium))))
@@ -491,3 +496,43 @@
 
 (defmethod medium-miter-limit ((medium graphic-forms-medium))
   0)
+
+;;; These and the following two are copy and modify from CLX
+(defun %set-gc-clipping-region (medium gc)
+  "Set graphic context GC (a Windows native object) the same as MEDIUM's setting."
+  (declare (type graphic-forms-medium medium))
+  (let ((clipping-region (climi::medium-device-region medium))
+        (tmp (slot-value medium 'clipping-region-tmp)))
+    (cond
+      ((region-equal clipping-region +nowhere+)
+       (gfg::set-clipping-region gc #())
+       )
+      ((typep clipping-region 'standard-rectangle)
+       (multiple-value-bind (x1 y1 width height)
+           (region->clipping-values clipping-region)
+         (setf (aref tmp 0) x1
+               (aref tmp 1) y1
+               (aref tmp 2) (+ x1 width)
+               (aref tmp 3) (+ y1 height))
+	 (gfg::set-clipping-region gc tmp)))
+      (t
+        (let ((rect-seq (%clipping-region->rect-seq clipping-region)))
+          (when rect-seq
+	    (gfg::set-clipping-region gc rect-seq)))))))
+
+(defun %clipping-region->rect-seq (clipping-region)
+  (typecase clipping-region 
+    (area (multiple-value-list (%region->clipping-values clipping-region)))
+    (t (loop 
+          for region in (nreverse (mapcan
+                                   (lambda (v) (unless (eq v +nowhere+) (list v)))
+                                   (region-set-regions clipping-region
+                                                       :normalize :y-banding)))
+          collect (coerce (multiple-value-list (%region->clipping-values region)) 'vector)))))
+
+(defun %region->clipping-values (region)
+  (with-bounding-rectangle* (min-x min-y max-x max-y) region
+    (values (round-coordinate min-x)
+	    (round-coordinate min-y)
+	    (round-coordinate max-x) 
+	    (round-coordinate max-y))))
