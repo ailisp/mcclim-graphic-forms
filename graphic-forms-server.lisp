@@ -147,7 +147,10 @@ to track this information manually.")
   (:documentation "Server side gadgets"))
 
 ;; (defmethod initialize-instance :after ((panel gfw-panel) &rest initargs)
-;;   (gfs::set-bk-mode (gfs:handle panel) gfs::+transparent+))
+;;   ;(gfs::set-bk-mode (gfs:handle panel) gfs::+transparent+)
+;;   (let ((gc (make-graphics-context panel)))
+;;     (setf (gfg:background-color gc)
+;; 	  (ink-to-color (sheet-medium (sheet panel)) +background-ink+))))
 
 (defclass sheet-event-dispatcher (gfw:event-dispatcher)
   ((port

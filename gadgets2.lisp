@@ -30,7 +30,7 @@
 ;;; gadgets
 ;;;
 
-(defmethod handle-repaint :before ((pane graphic-forms-label-pane) region)
+(defmethod handle-repaint :before ((pane graphic-forms-pane-mixin) region)
   (declare (ignore region))
   (with-bounding-rectangle* (x1 y1 x2 y2) (sheet-region pane) 
     (draw-rectangle* pane x1 y1 x2 y2 :filled t :ink +background-ink+)))

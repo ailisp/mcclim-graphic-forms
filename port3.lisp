@@ -1,5 +1,8 @@
 (in-package :clim-graphic-forms)
 
+(defclass graphic-forms-pane-mixin (standard-full-mirrored-sheet-mixin)
+  ())
+
 (defclass gfw-pointer (standard-pointer)
   ((cursor :accessor pointer-cursor :initform :upper-left)
    ;; these two may be surplus?
@@ -85,16 +88,6 @@
 				     :text ,(frame-pretty-name (pane-frame sheet))))))
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
-
-;; (defmethod realize-mirror ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
-;;   (let* ((parent (sheet-mirror (sheet-parent sheet)))
-;;          (mirror (<+ `(make-instance 'gfw-panel
-;; 				     :sheet ,sheet
-;; 				     :dispatcher ,*sheet-dispatcher*
-;; 				     :style '()
-;; 				     :parent ,parent))))
-;;     (climi::port-register-mirror (port sheet) sheet mirror)
-;;     mirror))
 
 (defmethod realize-mirror ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
   (let* ((parent (sheet-mirror (sheet-parent sheet)))

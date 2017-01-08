@@ -79,12 +79,17 @@
       (unless concrete-mirrored-pane-class-symbol
 	(setf concrete-mirrored-pane-class-symbol
 	      (intern concrete-mirrored-pane-class :clim-gf))
-	(eval
-	 `(defclass ,concrete-mirrored-pane-class-symbol
-	      (standard-full-mirrored-sheet-mixin
-	       ,concrete-pane-class-symbol)
-	    ()
-	    (:metaclass ,(type-of (find-class concrete-pane-class-symbol))))))
+	(let ((superclasses (if (subtypep concrete-pane-class 'sheet-with-medium-mixin)
+				(list 'graphic-forms-pane-mixin
+				      concrete-pane-class-symbol)
+				(list 'graphic-forms-pane-mixin 
+				      'permanent-medium-sheet-output-mixin
+				      concrete-pane-class-symbol))))
+	  (eval
+	   `(defclass ,concrete-mirrored-pane-class-symbol
+		,superclasses
+	      ()
+	      (:metaclass ,(type-of (find-class concrete-pane-class-symbol)))))))
       (setf concrete-pane-class (find-class concrete-mirrored-pane-class-symbol))))
   concrete-pane-class)
 
