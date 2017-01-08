@@ -1,2 +1,9 @@
-Sometimes window should be fixed sized and don't allow user to resize;
+For several layout window should be fixed sized and don't allow user to resize;
+
 when two window show up, first close the parent one will cause gf-server get frozen
+
+Sometimes:
+There is no applicable method for the generic function:
+  #<STANDARD-GENERIC-FUNCTION CLIM:DISPATCH-EVENT #xCEADBB6>
+when called with arguments:
+  (NIL #<CLIM:POINTER-BUTTON-RELEASE-EVENT #xECDEB86>)
