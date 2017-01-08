@@ -1,22 +1,5 @@
 (in-package :clim-graphic-forms)
 
-(defmacro %generate-graphic-forms-pane-classes (pane-map)
-  `(progn
-     ,@(mapcar (lambda (concrete-pane-class-name)
-		 (if (subtypep concrete-pane-class-name 'sheet-with-medium-mixin)
-		     (progn
-		       (print concrete-pane-class-name *trace-output*)
-		       (%expand-define-graphic-forms-pane-class concrete-pane-class-name pane-map))
-		     (%expand-define-graphic-forms-medium-pane-class concrete-pane-class-name pane-map)))
-	       *clim-concrete-pane-class*)))
-
-;;; generate all clim concrete pane class like this:
-;; (defclass graphic-forms-push-button-pane (standard-full-mirrored-sheet-mixin 
-;; 					  climi::push-button-pane)
-;;   ())
-(%generate-graphic-forms-pane-classes #.*graphic-forms-pane-class-map*)
-(%generate-graphic-forms-pane-classes #.*graphic-forms-native-pane-class-map*)
-
 (defmethod destroy-mirror ((port graphic-forms-port) (gadget value-gadget))
   (let ((mirror (climi::port-lookup-mirror port gadget)))
     (climi::port-unregister-mirror port gadget mirror)))

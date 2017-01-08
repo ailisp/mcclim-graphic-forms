@@ -10,4 +10,4 @@ Currently buttons, labels seem works (although must modify general pane def, oth
 [[./demodemo.png]]
 [[./label-tests.png]]
 [[./calc.png]]
-
+[[./clim-fig.png]]
