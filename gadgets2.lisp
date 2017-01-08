@@ -4,7 +4,9 @@
   `(progn
      ,@(mapcar (lambda (concrete-pane-class-name)
 		 (if (subtypep concrete-pane-class-name 'sheet-with-medium-mixin)
-		     (%expand-define-graphic-forms-pane-class concrete-pane-class-name pane-map)
+		     (progn
+		       (print concrete-pane-class-name *trace-output*)
+		       (%expand-define-graphic-forms-pane-class concrete-pane-class-name pane-map))
 		     (%expand-define-graphic-forms-medium-pane-class concrete-pane-class-name pane-map)))
 	       *clim-concrete-pane-class*)))
 

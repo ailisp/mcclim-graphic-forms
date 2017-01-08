@@ -92,14 +92,12 @@
 
 (defun %expand-define-graphic-forms-pane-class (concrete-pane-class-name pane-map)
   `(defclass ,(cdr (assoc concrete-pane-class-name pane-map)) (standard-full-mirrored-sheet-mixin
-;							       climi::always-repaint-background-mixin
 							       ,concrete-pane-class-name)
      ()))
 
 (defun %expand-define-graphic-forms-medium-pane-class (concrete-pane-class-name pane-map)
   `(defclass ,(cdr (assoc concrete-pane-class-name pane-map)) (standard-full-mirrored-sheet-mixin
-							       permanent-medium-sheet-output-mixin
-;							       climi::always-repaint-background-mixin
+;							       permanent-medium-sheet-output-mixin
 							       ,concrete-pane-class-name)
      ()))
 
