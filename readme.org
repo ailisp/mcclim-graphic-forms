@@ -11,3 +11,4 @@ Currently buttons, labels seem works (although must modify general pane def, oth
 [[./label-tests.png]]
 [[./calc.png]]
 [[./clim-fig.png]]
+[[./gadget-test.png]]
