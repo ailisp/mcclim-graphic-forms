@@ -58,7 +58,7 @@ to track this information manually.")
        (let ((gm (gfs::peek-message msg-ptr (cffi:null-pointer) 0 0 (logior gfs::+pm-noyield+ gfs::+pm-remove+)))
 	     (command-and-promise (graphic-forms-server-listen)))
 	 (when command-and-promise
-	   (graphic-forms-server-read)
+	   (graphic-forms-server-read)	   
 	   (lparallel:fulfill (cdr command-and-promise)
 	     (process-command (car command-and-promise))))
 	 (when (/= gm 0)
@@ -253,7 +253,6 @@ to track this information manually.")
 
 (defmethod gfw:event-mouse-move
     ((self sheet-event-dispatcher) mirror point button)
-  (debug-prin1 "mouse-move" point)
   (let ((graft-point (gfw:translate-point mirror :display point)))
    (server-add-event 
     (make-instance 'pointer-motion-event
@@ -340,21 +339,27 @@ to track this information manually.")
 		  )))
 
 (defmethod gfw:event-mouse-enter ((self sheet-event-dispatcher) mirror point button)
-  (server-add-event
-   (make-instance 'pointer-enter-event
-		  :pointer 0
-		  :sheet (sheet mirror)
-		  :x (gfs:point-x point)
-		  :y (gfs:point-y point)
-		  :button (translate-button-name button)
-		  :modifier-state 0)))
+  (let ((graft-point (gfw:translate-point mirror :display point)))
+    (server-add-event
+     (make-instance 'pointer-enter-event
+		    :pointer 0
+		    :sheet (sheet mirror)
+		    :x (gfs:point-x point)
+		    :y (gfs:point-y point)
+		    :graft-x (gfs:point-x graft-point)
+		    :graft-y (gfs:point-y graft-point)
+		    :button (translate-button-name button)
+		    :modifier-state 0))))
 
 (defmethod gfw:event-mouse-exit ((self sheet-event-dispatcher) mirror point button)
-  (server-add-event
-   (make-instance 'pointer-exit-event
-		  :pointer 0
-		  :sheet (sheet mirror)
-		  :x (gfs:point-x point)
-		  :y (gfs:point-y point)
-		  :button (translate-button-name button)
-		  :modifier-state 0)))
+  (let ((graft-point (gfw:translate-point mirror :display point)))
+    (server-add-event
+     (make-instance 'pointer-exit-event
+		    :pointer 0
+		    :sheet (sheet mirror)
+		    :x (gfs:point-x point)
+		    :y (gfs:point-y point)
+		    :graft-x (gfs:point-x graft-point)
+		    :graft-y (gfs:point-y graft-point)
+		    :button (translate-button-name button)
+		    :modifier-state 0))))

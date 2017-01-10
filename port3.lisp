@@ -94,15 +94,15 @@
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
 
-(defmethod destroy-mirror ((port graphic-forms-port) (sheet graphic-forms-pane-mixin))
+(defmethod destroy-mirror ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
   (let ((mirror (climi::port-lookup-mirror port sheet)))
     (climi::port-unregister-mirror port sheet mirror)
     (<- `(gfs:dispose ,mirror))))
 
-(defmethod port-enable-sheet ((port graphic-forms-port) (sheet graphic-forms-pane-mixin))
+(defmethod port-enable-sheet ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
   (<- `(gfw:show ,(climi::port-lookup-mirror port sheet) t)))
 
-(defmethod port-disable-sheet ((port graphic-forms-port) (sheet graphic-forms-pane-mixin))
+(defmethod port-disable-sheet ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
   (<- `(gfw:show ,(climi::port-lookup-mirror port sheet) nil)))
 
 (defmethod destroy-port :before ((port graphic-forms-port))
@@ -110,11 +110,11 @@
   (close-graphic-forms-server))
 
 ;This function and (setf port-motion-hints) are performance plus specific to CLX, not useful on Windows
-(defmethod port-motion-hints ((port graphic-forms-port) (sheet graphic-forms-pane-mixin))
+(defmethod port-motion-hints ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
   ())
 
 (defmethod (setf port-motion-hints)
-    (value (port graphic-forms-port) (sheet graphic-forms-pane-mixin))
+    (value (port graphic-forms-port) (sheet mirrored-sheet-mixin))
   value)
 
 (defmethod get-next-event ((port graphic-forms-port) &key wait-function (timeout nil))
@@ -149,11 +149,11 @@
 (defmethod port-string-width ((port graphic-forms-port) text-style string &key (start 0) end)
   #+nil (<- `(gfs::debug-format "port-string-width called: ~a ~c~%" ,text-style ,string)))
 
-(defmethod port-mirror-width ((port graphic-forms-port) (sheet graphic-forms-pane-mixin))
+(defmethod port-mirror-width ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
   (let ((mirror (climi::port-lookup-mirror port sheet)))
     (<+ `(gfs:size-width (gfw:size ,mirror)))))
 
-(defmethod port-mirror-height ((port graphic-forms-port) (sheet graphic-forms-pane-mixin))
+(defmethod port-mirror-height ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
   (let ((mirror (climi::port-lookup-mirror port sheet)))
     (<+ `(gfs:size-height (gfw:size ,mirror)))))
 
