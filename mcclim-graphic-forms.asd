@@ -1,6 +1,7 @@
 (defsystem :mcclim-graphic-forms
   :depends-on (:clim :graphic-forms :lparallel
-	       :mcclim-full-mirrored-standard)
+		     :mcclim-full-mirrored-standard
+		     :mcclim-single-mirrored-standard)
   :serial t 
   :components
   ((:file "package")

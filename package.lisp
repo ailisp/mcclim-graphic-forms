@@ -5,9 +5,11 @@
   (:use :clim :clim-lisp :clim-backend)
   (:import-from :clim-standard
 
+		:standard-single-mirrored-sheet-mixin
 		:standard-full-mirrored-sheet-mixin 
 		:sheet-mirror-region
 		:standard-graft
-		:standard-event-port-mixin
 		:standard-port
+		:standard-event-port-mixin
+		:standard-handled-event-port-mixin 
 		:pointer-grab-sheet))

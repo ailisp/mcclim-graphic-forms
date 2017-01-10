@@ -253,44 +253,45 @@ to track this information manually.")
 
 (defmethod gfw:event-mouse-move
     ((self sheet-event-dispatcher) mirror point button)
-  (server-add-event 
-   (make-instance 'pointer-motion-event
-		  :pointer 0
-		  :sheet (sheet mirror)
-		  :x (gfs:point-x point)
-		  :y (gfs:point-y point)
-		  :button (translate-button-name button)
-		  ;; FIXME:
-;;; 		       :graft-x
-;;; 		       :graft-y
-		  :modifier-state 0)))
+  (debug-prin1 "mouse-move" point)
+  (let ((graft-point (gfw:translate-point mirror :display point)))
+   (server-add-event 
+    (make-instance 'pointer-motion-event
+		   :pointer 0
+		   :sheet (sheet mirror)
+		   :x (gfs:point-x point)
+		   :y (gfs:point-y point)
+		   :button (translate-button-name button)
+		   :graft-x (gfs:point-x graft-point)
+		   :graft-y (gfs:point-y graft-point)
+		   :modifier-state 0))))
 
 (defmethod gfw:event-mouse-down ((self sheet-event-dispatcher) mirror point button)
   (setf *graphic-forms-mouse-down-sheet* (sheet mirror))
-  (server-add-event 
-   (make-instance 'pointer-button-press-event
-		  :pointer 0
-		  :sheet *graphic-forms-mouse-down-sheet*
-		  :x (gfs:point-x point)
-		  :y (gfs:point-y point)
-		  :button (translate-button-name button)
-		  ;; FIXME:
-;;; 		       :graft-x
-;;; 		       :graft-y
-		  :modifier-state 0)))
+  (let ((graft-point (gfw:translate-point mirror :display point)))
+    (server-add-event 
+     (make-instance 'pointer-button-press-event
+		    :pointer 0
+		    :sheet *graphic-forms-mouse-down-sheet*
+		    :x (gfs:point-x point)
+		    :y (gfs:point-y point)
+		    :button (translate-button-name button)
+		    :graft-x (gfs:point-x graft-point)
+		    :graft-y (gfs:point-y graft-point)
+		    :modifier-state 0))))
 
 (defmethod gfw:event-mouse-up ((self sheet-event-dispatcher) mirror point button)
-  (server-add-event 
-   (make-instance 'pointer-button-release-event
-		  :pointer 0
-		  :sheet *graphic-forms-mouse-down-sheet*
-		  :x (gfs:point-x point)
-		  :y (gfs:point-y point)
-		  :button (translate-button-name button)
-		  ;; FIXME:
-;;; 		       :graft-x
-;;; 		       :graft-y
-		  :modifier-state 0))
+  (let ((graft-point (gfw:translate-point mirror :display point)))
+    (server-add-event 
+     (make-instance 'pointer-button-release-event
+		    :pointer 0
+		    :sheet *graphic-forms-mouse-down-sheet*
+		    :x (gfs:point-x point)
+		    :y (gfs:point-y point)
+		    :button (translate-button-name button)
+		    :graft-x (gfs:point-x graft-point)
+		    :graft-y (gfs:point-y graft-point)
+		    :modifier-state 0)))
   (setf *graphic-forms-mouse-down-sheet* nil))
 
 (defun char-to-sym (char)

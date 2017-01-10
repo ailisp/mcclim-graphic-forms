@@ -1,8 +1,5 @@
 (in-package :clim-graphic-forms)
 
-;;; note that the %mirror-map of this non-native frame manager also includes lots of gadget classes,
-;;; because the push-button-pane must be a standard-full-mirrored-sheet-mixin's subclass to be drawn
-;;; correctly
 (defclass graphic-forms-frame-manager (frame-manager)
   ()
   (:documentation "The portable look and feel frame manager on Windows. Only top level window is mirrored to Windows native top levelwindow, all gadgets are portable CLIM implementation created by draw-*"))
@@ -65,15 +62,20 @@
                         (find-class class-name nil))
                       types))))
 
+(defmethod %get-mirroring-fn ((fm graphic-forms-frame-manager))
+  #'(lambda (pane-class)
+      (subtypep pane-class 'climi::top-level-sheet-pane)))
+
 (defmethod %maybe-mirroring ((fm graphic-forms-frame-manager) concrete-pane-class)
   (when (and (not (subtypep concrete-pane-class 'mirrored-sheet-mixin))
-	     (subtypep concrete-pane-class 'basic-pane))
+	     (funcall (%get-mirroring-fn fm) concrete-pane-class))
     (let* ((concrete-pane-class-symbol (if (typep concrete-pane-class 'class)
 					   (class-name concrete-pane-class)
 					   concrete-pane-class))
 	   (concrete-mirrored-pane-class (concatenate 'string
 						      "GRAPHIC-FORMS-"
-						      (symbol-name concrete-pane-class-symbol)))
+						      (symbol-name concrete-pane-class-symbol)
+						      "-DUMMY"))
 	   (concrete-mirrored-pane-class-symbol (find-symbol concrete-mirrored-pane-class
 							     :clim-gf)))
       (unless concrete-mirrored-pane-class-symbol
