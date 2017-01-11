@@ -76,21 +76,25 @@
 ;;;
 
 (defmethod realize-mirror ((port graphic-forms-port) (sheet climi::top-level-sheet-pane))
-  (let* ((mirror (<+ `(make-instance 'gfw-top-level
-				     :sheet ,sheet
-				     :dispatcher ,*sheet-dispatcher*
-				     :style '(:workspace)
-				     :text ,(frame-pretty-name (pane-frame sheet))))))
+  (let* ((q (compose-space sheet))
+	 (mirror (<+ `(make-instance 'gfw-top-level
+				    :sheet ,sheet
+				    :dispatcher ,*sheet-dispatcher*
+				    :style '(:workspace)
+				    :text ,(frame-pretty-name (pane-frame sheet))
+				    :minimum-size ,(requirement->size q)))))
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
 
 (defmethod realize-mirror ((port graphic-forms-port) (sheet climi::unmanaged-top-level-sheet-pane))
-  (let* ((parent (sheet-mirror (sheet-parent sheet)))
+  (let* ((q (compose-space sheet))
+	 (parent (sheet-mirror (sheet-parent sheet)))
          (mirror (<+ `(make-instance 'gfw-panel
 				     :sheet ,sheet
 				     :dispatcher ,*sheet-dispatcher*
 				     :style '()
-				     :parent ,parent))))
+				     :parent ,parent
+				     :minimum-size ,(requirement->size q)))))
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
 
@@ -123,7 +127,8 @@
 
 (defmethod process-next-event :after ((port graphic-forms-port) &key wait-function (timeout nil))
   (declare (ignore wait-function timeout))
-  (render-pending-mediums))
+  (render-pending-mediums)
+  )
 
 (defmethod make-graft ((port graphic-forms-port) &key (orientation :default) (units :device))
   (let ((result (make-instance 'graphic-forms-graft

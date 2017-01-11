@@ -215,8 +215,8 @@ to track this information manually.")
       (gfg:draw-filled-rectangle gc rect))
     (server-add-event
      (make-instance 'window-repaint-event
-    		    :sheet sheet
-    		    :region (translate-rectangle rect)))))
+		    :sheet sheet
+		    :region (translate-rectangle rect)))))
 
 ;;; This function should only be called in graphics-forms-server thread
 (defun generate-configuration-event (mirror pnt size)

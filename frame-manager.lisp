@@ -95,4 +95,11 @@
       (setf concrete-pane-class (find-class concrete-mirrored-pane-class-symbol))))
   concrete-pane-class)
 
-;; TODO: adopt-frame note-space-requirements-changed
+(defmethod note-space-requirements-changed :after ((graft graphic-forms-graft) pane)
+  (tell-window-manager-about-space-requirements pane))
+
+(defmethod tell-window-manager-about-space-requirements ((pane t))
+  ;; hmm
+  nil)
+
+;; TODO: adopt-frame tell-window-manager-about-space-requirements

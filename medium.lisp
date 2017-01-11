@@ -33,7 +33,7 @@
 
 (defun render-pending-mediums ()
   (loop for medium in *mediums-to-render*
-        do (render-medium-buffer medium))
+     do (render-medium-buffer medium))
   (setf *mediums-to-render* nil))
 
 ;;; FIXME: For gf-toplevel-sheet-pane, the sheet-region is incorrect, it should be modify to the
@@ -412,7 +412,9 @@
                               start end
                               align-x align-y
                               toward-x toward-y transform-glyphs)
+
   (declare (ignore align-x align-y toward-x toward-y transform-glyphs))
+  (debug-prin1 "draw-text" string)
   (when (%target-of medium)
     (sync-text-style medium
                      (merge-text-styles (medium-text-style medium)
@@ -423,6 +425,7 @@
       (let ((font (font-of medium))
 	    (color (ink-to-color medium (medium-ink medium)))) ;ink-to-color here is questionable? server thread color obj?
 	(<+ `(setf (gfg:foreground-color ,gc) ,color))
+	(debug-prin1 color)
 	(if font
 	    (<+ `(setf (gfg:font ,gc) ,font)))
 	(let ((ascent (<+ `(gfg:ascent (gfg:metrics ,gc ,font))))

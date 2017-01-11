@@ -1,8 +1,8 @@
 (in-package :clim-graphic-forms)
 
 (defun requirement->size (req)
-  (<+ `(gfs:make-size :width ,(floor (space-requirement-width req))
-		      :height ,(floor (space-requirement-height req)))))
+  (gfs:make-size :width (floor (space-requirement-width req))
+		 :height (floor (space-requirement-height req))))
 
 ;;; This function should only be called in graphics-forms-server thread
 (defun translate-rectangle (gfw-rect)
