@@ -136,21 +136,15 @@ to track this information manually.")
   ((sheet
     :accessor sheet
     :initarg :sheet
+    :initform nil)
+   (canvas
+    :accessor canvas
+    :initarg :canvas
     :initform nil))
   (:documentation "Server side graphic-forms object"))
 
 (defclass gfw-top-level (gfw:top-level gf-mirror-mixin) ()
   (:documentation "Server side top level window"))
-;; (defclass gfw-panel (gfg:image gf-mirror-mixin) ()
-;;   (:documentation "Server side gadgets"))
-(defclass gfw-panel (gfw:panel gf-mirror-mixin) ()
-  (:documentation "Server side gadgets"))
-
-;; (defmethod initialize-instance :after ((panel gfw-panel) &rest initargs)
-;;   ;(gfs::set-bk-mode (gfs:handle panel) gfs::+transparent+)
-;;   (let ((gc (make-graphics-context panel)))
-;;     (setf (gfg:background-color gc)
-;; 	  (ink-to-color (sheet-medium (sheet panel)) +background-ink+))))
 
 (defclass sheet-event-dispatcher (gfw:event-dispatcher)
   ((port
@@ -182,37 +176,13 @@ to track this information manually.")
     (t
      +white+)))
 
-;;; This function should only be called in graphics-forms-server thread
-(defun ink-to-color (medium ink)
-  (cond
-    ((subtypep (class-of ink) (find-class 'climi::opacity))
-     (setf ink (medium-foreground medium))) ; see discussion of opacity in design.lisp
-    ((eql ink +foreground-ink+)
-     (setf ink (medium-foreground medium)))
-    ((eql ink +background-ink+)
-     (setf ink (medium-background medium)))
-    ((eql ink +flipping-ink+)
-     (warn "+flipping-ink+ encountered in ink-to-color~%")
-     (setf ink nil)))
-  (if ink
-      (multiple-value-bind (red green blue) (clim:color-rgb ink)
-	(gfg:make-color :red (min (truncate (* red 256)) 255)
-			:green (min (truncate (* green 256)) 255)
-			:blue (min (truncate (* blue 256)) 255)))
-      (progn (debug-prin1 "nononono")
-       (with-server-graphics-context (gc (target-of medium))
-	 (gfg:background-color gc)))))
-
 (defmethod gfw:event-paint ((self sheet-event-dispatcher) mirror gc rect)
   (let ((sheet (sheet mirror)))
-    (when (and (typep sheet 'sheet-with-medium-mixin)
-;               (not (image-of (sheet-medium sheet)))
-	       )
-      (let ((c (ink-to-color (sheet-medium sheet)
-                             (sheet-desired-ink sheet))))
+    (when (and (typep sheet 'sheet-with-medium-mixin))
+      (let ((c (absolute-ink-to-color (sheet-desired-ink sheet))))
         (setf (gfg:background-color gc) c
-              (gfg:foreground-color gc) c))
-      (gfg:draw-filled-rectangle gc rect))
+              (gfg:foreground-color gc) c)
+	(gfg:draw-filled-rectangle gc rect)))
     (server-add-event
      (make-instance 'window-repaint-event
 		    :sheet sheet
@@ -230,11 +200,6 @@ to track this information manually.")
 (defmethod gfw:event-resize ((self sheet-event-dispatcher) mirror size type)
   (declare (ignore type))
   (setf size (gfw:client-size mirror))
-  (let ((sheet (sheet mirror)))
-    (if (and sheet (subtypep (class-of sheet) 'sheet-with-medium-mixin))
-        (let ((medium (climi::sheet-medium sheet)))
-          (when (and medium (image-of medium))
-            (resize-medium-buffer medium size)))))
   (server-add-event
    (generate-configuration-event mirror (gfw:location mirror) size)))
 

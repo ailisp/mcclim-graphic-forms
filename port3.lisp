@@ -77,12 +77,17 @@
 
 (defmethod realize-mirror ((port graphic-forms-port) (sheet climi::top-level-sheet-pane))
   (let* ((q (compose-space sheet))
+	 (canvas (<+ `(make-instance 'gfg:image :size
+				     (gfs:make-size
+				      :width ,(port-mirror-width port (graft port))
+				      :height ,(port-mirror-height port (graft port))))))
 	 (mirror (<+ `(make-instance 'gfw-top-level
-				    :sheet ,sheet
-				    :dispatcher ,*sheet-dispatcher*
-				    :style '(:workspace)
-				    :text ,(frame-pretty-name (pane-frame sheet))
-				    :minimum-size ,(requirement->size q)))))
+				     :sheet ,sheet
+				     :canvas ,canvas
+				     :dispatcher ,*sheet-dispatcher*
+				     :style '(:workspace)
+				     :text ,(frame-pretty-name (pane-frame sheet))
+				     :minimum-size ,(requirement->size q)))))
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
 
@@ -126,15 +131,14 @@
   (server-get-event))
 
 (defmethod process-next-event :after ((port graphic-forms-port) &key wait-function (timeout nil))
-  (declare (ignore wait-function timeout))
-  (render-pending-mediums)
-  )
+  (declare (ignore wait-function timeout)))
 
 (defmethod make-graft ((port graphic-forms-port) &key (orientation :default) (units :device))
-  (let ((result (make-instance 'graphic-forms-graft
-			       :port port :mirror (gensym)
-			       :orientation orientation :units units)))
-    result))
+  (let ((graft (make-instance 'graphic-forms-graft
+			      :port port :mirror (gensym)
+			      :orientation orientation :units units)))
+    (push graft (climi::port-grafts port))
+    graft))
 
 (defmethod make-medium ((port graphic-forms-port) sheet)
   (make-instance 'graphic-forms-medium :port port :sheet sheet))

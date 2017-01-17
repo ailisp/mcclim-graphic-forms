@@ -10,6 +10,6 @@
    (:file "graft")
    (:file "port3")
    (:file "gadgets2")
-   (:file "medium")
+   (:file "medium3")
    (:file "pixmap")
    (:file "frame-manager")))
