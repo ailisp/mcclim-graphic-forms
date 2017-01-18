@@ -485,11 +485,19 @@ text related methods on GRAPHIC-FORMS-MEDIUM class."
 			      transform-glyphs)
   ())
 
-(defmethod medium-finish-output ((medium graphic-forms-medium))
-  ())
+(defparameter *medium-origin* (<+ `(gfs:make-point)))
 
+(defun draw-medium-image-to-canvas (medium)
+  (let ((mirror (climi::port-lookup-mirror (port (medium-sheet medium)) (medium-sheet medium))))
+    (when (typep mirror 'gfw-top-level)
+      (<+ `(gfg:draw-image ,(canvas-gcontext mirror) ,(medium-image medium) ,*medium-origin*)))))
+
+(defmethod medium-finish-output ((medium graphic-forms-medium))
+  (draw-medium-image-to-canvas medium))
+
+;; actually called this
 (defmethod medium-force-output ((medium graphic-forms-medium))
-  ())
+  (draw-medium-image-to-canvas medium))
 
 
 ;;; Misc

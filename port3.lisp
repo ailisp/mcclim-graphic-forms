@@ -81,9 +81,11 @@
 				     (gfs:make-size
 				      :width ,(port-mirror-width port (graft port))
 				      :height ,(port-mirror-height port (graft port))))))
+	 (canvas-gcontext (<+ `(make-graphics-context ,canvas)))
 	 (mirror (<+ `(make-instance 'gfw-top-level
 				     :sheet ,sheet
 				     :canvas ,canvas
+				     :canvas-gcontext ,canvas-gcontext
 				     :dispatcher ,*sheet-dispatcher*
 				     :style '(:workspace)
 				     :text ,(frame-pretty-name (pane-frame sheet))

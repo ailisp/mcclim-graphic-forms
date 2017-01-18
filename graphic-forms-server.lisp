@@ -140,6 +140,10 @@ to track this information manually.")
    (canvas
     :accessor canvas
     :initarg :canvas
+    :initform nil)
+   (canvas-gcontext
+    :accessor canvas-gcontext
+    :initarg :canvas-gcontext
     :initform nil))
   (:documentation "Server side graphic-forms object"))
 
