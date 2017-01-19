@@ -144,11 +144,19 @@ to track this information manually.")
    (canvas-gcontext
     :accessor canvas-gcontext
     :initarg :canvas-gcontext
+    :initform nil)
+   (mirror-gcontext
+    :accessor mirror-gcontext
+    :initarg :mirror-gcontext
     :initform nil))
   (:documentation "Server side graphic-forms object"))
 
 (defclass gfw-top-level (gfw:top-level gf-mirror-mixin) ()
   (:documentation "Server side top level window"))
+
+;; ;;; This function should only be called on the server side.
+;; (defun repaint-canvas (mirror)
+;;   (gfg:draw-image (mirror-gcontext mirror) (canvas mirror) *origin*))
 
 (defclass sheet-event-dispatcher (gfw:event-dispatcher)
   ((port

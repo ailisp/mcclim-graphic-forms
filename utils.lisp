@@ -47,4 +47,4 @@
   ;; work well.
   (floor (+ x .5)))
 
-
+(defparameter *origin* (<+ `(gfs:make-point)))

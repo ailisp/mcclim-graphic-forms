@@ -85,11 +85,13 @@
 	 (mirror (<+ `(make-instance 'gfw-top-level
 				     :sheet ,sheet
 				     :canvas ,canvas
-				     :canvas-gcontext ,canvas-gcontext
+				     :canvas-gcontext ,canvas-gcontext 
 				     :dispatcher ,*sheet-dispatcher*
 				     :style '(:workspace)
 				     :text ,(frame-pretty-name (pane-frame sheet))
-				     :minimum-size ,(requirement->size q)))))
+				     :minimum-size ,(requirement->size q))))
+	 (mirror-gcontext (<+ `(make-graphics-context ,mirror))))
+    (setf (mirror-gcontext mirror) mirror-gcontext)
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
 

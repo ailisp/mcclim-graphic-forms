@@ -243,7 +243,7 @@ text related methods on GRAPHIC-FORMS-MEDIUM class."
 
 (defmacro with-graphic-forms-medium ((medium) &body body)
   `(let ((tr (sheet-native-transformation (medium-sheet ,medium)))
-	 (gc (medium-gcontext medium)))
+	 (gc (medium-gcontext ,medium)))
      ,@body))
 
 (defmacro with-filled-gcontext ((medium) &body body)
@@ -485,19 +485,22 @@ text related methods on GRAPHIC-FORMS-MEDIUM class."
 			      transform-glyphs)
   ())
 
-(defparameter *medium-origin* (<+ `(gfs:make-point)))
-
 (defun draw-medium-image-to-canvas (medium)
   (let ((mirror (climi::port-lookup-mirror (port (medium-sheet medium)) (medium-sheet medium))))
     (when (typep mirror 'gfw-top-level)
-      (<+ `(gfg:draw-image ,(canvas-gcontext mirror) ,(medium-image medium) ,*medium-origin*)))))
+      (<+ `(gfg:draw-image ,(mirror-gcontext mirror) ,(medium-image medium) ,*origin*))
+      
+      (debug-prin1 "medium drawn" medium (medium-sheet medium) (mirror-gcontext mirror) (<+ `(gfg:foreground-color ,(mirror-gcontext mirror)))))))
 
-(defmethod medium-finish-output ((medium graphic-forms-medium))
-  (draw-medium-image-to-canvas medium))
+(defmethod note-sheet-grafted :after (sheet)
+  (draw-medium-image-to-canvas (sheet-medium sheet)))
+
+;; (defmethod medium-.finish-output ((medium graphic-forms-medium))
+;;   (draw-medium-image-to-canvas medium))
 
 ;; actually called this
-(defmethod medium-force-output ((medium graphic-forms-medium))
-  (draw-medium-image-to-canvas medium))
+;; (defmethod medium-force-output ((medium graphic-forms-medium))
+;;   (draw-medium-image-to-canvas medium))
 
 
 ;;; Misc
