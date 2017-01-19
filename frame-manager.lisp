@@ -1,5 +1,8 @@
 (in-package :clim-graphic-forms)
 
+;;; note that the %mirror-map of this non-native frame manager also includes lots of gadget classes,
+;;; because the push-button-pane must be a standard-full-mirrored-sheet-mixin's subclass to be drawn
+;;; correctly
 (defclass graphic-forms-frame-manager (frame-manager)
   ()
   (:documentation "The portable look and feel frame manager on Windows. Only top level window is mirrored to Windows native top levelwindow, all gadgets are portable CLIM implementation created by draw-*"))
@@ -9,7 +12,6 @@
   (:documentation "The Windows native look and feel frame manager. All CLIM gadgets are mirrored to Windows native ones."))
 
 (defmethod make-pane-1 ((fm graphic-forms-frame-manager) (frame application-frame) type &rest args)
-  (debug-prin1 "make-pane-1" type (%find-concrete-pane-class type) (%maybe-mirroring fm (%find-concrete-pane-class type)))
   (apply #'make-instance
 	 (%maybe-mirroring fm (%find-concrete-pane-class type))
 	 :frame frame
@@ -63,20 +65,15 @@
                         (find-class class-name nil))
                       types))))
 
-(defmethod %get-mirroring-fn ((fm graphic-forms-frame-manager))
-  #'(lambda (pane-class)
-      (subtypep pane-class 'climi::top-level-sheet-pane)))
-
 (defmethod %maybe-mirroring ((fm graphic-forms-frame-manager) concrete-pane-class)
   (when (and (not (subtypep concrete-pane-class 'mirrored-sheet-mixin))
-	     (funcall (%get-mirroring-fn fm) concrete-pane-class))
+	     (subtypep concrete-pane-class 'basic-pane))
     (let* ((concrete-pane-class-symbol (if (typep concrete-pane-class 'class)
 					   (class-name concrete-pane-class)
 					   concrete-pane-class))
 	   (concrete-mirrored-pane-class (concatenate 'string
 						      "GRAPHIC-FORMS-"
-						      (symbol-name concrete-pane-class-symbol)
-						      "-DUMMY"))
+						      (symbol-name concrete-pane-class-symbol)))
 	   (concrete-mirrored-pane-class-symbol (find-symbol concrete-mirrored-pane-class
 							     :clim-gf)))
       (unless concrete-mirrored-pane-class-symbol
@@ -96,11 +93,4 @@
       (setf concrete-pane-class (find-class concrete-mirrored-pane-class-symbol))))
   concrete-pane-class)
 
-(defmethod note-space-requirements-changed :after ((graft graphic-forms-graft) pane)
-  (tell-window-manager-about-space-requirements pane))
-
-(defmethod tell-window-manager-about-space-requirements ((pane t))
-  ;; hmm
-  nil)
-
-;; TODO: adopt-frame tell-window-manager-about-space-requirements
+;; TODO: adopt-frame note-space-requirements-changed

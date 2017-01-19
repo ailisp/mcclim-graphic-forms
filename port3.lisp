@@ -1,6 +1,6 @@
 (in-package :clim-graphic-forms)
 
-(defclass graphic-forms-pane-mixin (standard-single-mirrored-sheet-mixin)
+(defclass graphic-forms-pane-mixin (standard-full-mirrored-sheet-mixin)
   ())
 
 (defclass gfw-pointer (standard-pointer)
@@ -9,7 +9,7 @@
    (x :initform 0)
    (y :initform 0)))
 
-(defclass graphic-forms-port (standard-handled-event-port-mixin standard-port)
+(defclass graphic-forms-port (standard-event-port-mixin standard-port)
   ((screen
     :accessor graphic-forms-port-screen
     :initform nil)
@@ -71,51 +71,43 @@
 	       (gfs:make-point :x ,(floor x)
 			       :y ,(floor y))))))
 
+(defclass graphic-forms-top-level-sheet-pane (standard-full-mirrored-sheet-mixin
+					      permanent-medium-sheet-output-mixin
+					      climi::top-level-sheet-pane)
+  ())
+
 ;;;
 ;;; sheet methods
 ;;;
 
-(defmethod realize-mirror ((port graphic-forms-port) (sheet climi::top-level-sheet-pane))
-  (let* ((q (compose-space sheet))
-	 (canvas (<+ `(make-instance 'gfg:image :size
-				     (gfs:make-size
-				      :width ,(port-mirror-width port (graft port))
-				      :height ,(port-mirror-height port (graft port))))))
-	 (canvas-gcontext (<+ `(make-graphics-context ,canvas)))
-	 (mirror (<+ `(make-instance 'gfw-top-level
+(defmethod realize-mirror ((port graphic-forms-port) (sheet graphic-forms-top-level-sheet-pane))
+  (let* ((mirror (<+ `(make-instance 'gfw-top-level
 				     :sheet ,sheet
-				     :canvas ,canvas
-				     :canvas-gcontext ,canvas-gcontext 
 				     :dispatcher ,*sheet-dispatcher*
 				     :style '(:workspace)
-				     :text ,(frame-pretty-name (pane-frame sheet))
-				     :minimum-size ,(requirement->size q))))
-	 (mirror-gcontext (<+ `(make-graphics-context ,mirror))))
-    (setf (mirror-gcontext mirror) mirror-gcontext)
+				     :text ,(frame-pretty-name (pane-frame sheet))))))
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
 
-(defmethod realize-mirror ((port graphic-forms-port) (sheet climi::unmanaged-top-level-sheet-pane))
-  (let* ((q (compose-space sheet))
-	 (parent (sheet-mirror (sheet-parent sheet)))
+(defmethod realize-mirror ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
+  (let* ((parent (sheet-mirror (sheet-parent sheet)))
          (mirror (<+ `(make-instance 'gfw-panel
 				     :sheet ,sheet
 				     :dispatcher ,*sheet-dispatcher*
 				     :style '()
-				     :parent ,parent
-				     :minimum-size ,(requirement->size q)))))
+				     :parent ,parent))))
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
 
-(defmethod destroy-mirror ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
+(defmethod destroy-mirror ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
   (let ((mirror (climi::port-lookup-mirror port sheet)))
     (climi::port-unregister-mirror port sheet mirror)
     (<- `(gfs:dispose ,mirror))))
 
-(defmethod port-enable-sheet ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
+(defmethod port-enable-sheet ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
   (<- `(gfw:show ,(climi::port-lookup-mirror port sheet) t)))
 
-(defmethod port-disable-sheet ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
+(defmethod port-disable-sheet ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
   (<- `(gfw:show ,(climi::port-lookup-mirror port sheet) nil)))
 
 (defmethod destroy-port :before ((port graphic-forms-port))
@@ -123,11 +115,11 @@
   (close-graphic-forms-server))
 
 ;This function and (setf port-motion-hints) are performance plus specific to CLX, not useful on Windows
-(defmethod port-motion-hints ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
+(defmethod port-motion-hints ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
   ())
 
 (defmethod (setf port-motion-hints)
-    (value (port graphic-forms-port) (sheet mirrored-sheet-mixin))
+    (value (port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
   value)
 
 (defmethod get-next-event ((port graphic-forms-port) &key wait-function (timeout nil))
@@ -135,14 +127,14 @@
   (server-get-event))
 
 (defmethod process-next-event :after ((port graphic-forms-port) &key wait-function (timeout nil))
-  (declare (ignore wait-function timeout)))
+  (declare (ignore wait-function timeout))
+  (render-pending-mediums))
 
 (defmethod make-graft ((port graphic-forms-port) &key (orientation :default) (units :device))
-  (let ((graft (make-instance 'graphic-forms-graft
-			      :port port :mirror (gensym)
-			      :orientation orientation :units units)))
-    (push graft (climi::port-grafts port))
-    graft))
+  (let ((result (make-instance 'graphic-forms-graft
+			       :port port :mirror (gensym)
+			       :orientation orientation :units units)))
+    result))
 
 (defmethod make-medium ((port graphic-forms-port) sheet)
   (make-instance 'graphic-forms-medium :port port :sheet sheet))
@@ -162,11 +154,11 @@
 (defmethod port-string-width ((port graphic-forms-port) text-style string &key (start 0) end)
   #+nil (<- `(gfs::debug-format "port-string-width called: ~a ~c~%" ,text-style ,string)))
 
-(defmethod port-mirror-width ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
+(defmethod port-mirror-width ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
   (let ((mirror (climi::port-lookup-mirror port sheet)))
     (<+ `(gfs:size-width (gfw:size ,mirror)))))
 
-(defmethod port-mirror-height ((port graphic-forms-port) (sheet mirrored-sheet-mixin))
+(defmethod port-mirror-height ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
   (let ((mirror (climi::port-lookup-mirror port sheet)))
     (<+ `(gfs:size-height (gfw:size ,mirror)))))
 

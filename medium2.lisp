@@ -211,7 +211,7 @@
 		(<+ `(gfg:ascent ,metrics)))))))
 
 (defmethod medium-beep ((medium graphic-forms-medium))
-)
+  (<+ `(gfs::beep 750 300)))
 
 (defmethod medium-buffering-output-p ((medium graphic-forms-medium))
   (buffering-p medium))

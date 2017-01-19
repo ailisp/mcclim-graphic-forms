@@ -1,7 +1,6 @@
 (defsystem :mcclim-graphic-forms
   :depends-on (:clim :graphic-forms :lparallel
-		     :mcclim-full-mirrored-standard
-		     :mcclim-single-mirrored-standard)
+	       :mcclim-full-mirrored-standard)
   :serial t 
   :components
   ((:file "package")
@@ -10,6 +9,6 @@
    (:file "graft")
    (:file "port3")
    (:file "gadgets2")
-   (:file "medium3")
+   (:file "medium")
    (:file "pixmap")
    (:file "frame-manager")))

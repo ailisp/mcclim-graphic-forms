@@ -58,7 +58,7 @@ to track this information manually.")
        (let ((gm (gfs::peek-message msg-ptr (cffi:null-pointer) 0 0 (logior gfs::+pm-noyield+ gfs::+pm-remove+)))
 	     (command-and-promise (graphic-forms-server-listen)))
 	 (when command-and-promise
-	   (graphic-forms-server-read)	   
+	   (graphic-forms-server-read)
 	   (lparallel:fulfill (cdr command-and-promise)
 	     (process-command (car command-and-promise))))
 	 (when (/= gm 0)
@@ -136,27 +136,21 @@ to track this information manually.")
   ((sheet
     :accessor sheet
     :initarg :sheet
-    :initform nil)
-   (canvas
-    :accessor canvas
-    :initarg :canvas
-    :initform nil)
-   (canvas-gcontext
-    :accessor canvas-gcontext
-    :initarg :canvas-gcontext
-    :initform nil)
-   (mirror-gcontext
-    :accessor mirror-gcontext
-    :initarg :mirror-gcontext
     :initform nil))
   (:documentation "Server side graphic-forms object"))
 
 (defclass gfw-top-level (gfw:top-level gf-mirror-mixin) ()
   (:documentation "Server side top level window"))
+;; (defclass gfw-panel (gfg:image gf-mirror-mixin) ()
+;;   (:documentation "Server side gadgets"))
+(defclass gfw-panel (gfw:panel gf-mirror-mixin) ()
+  (:documentation "Server side gadgets"))
 
-;; ;;; This function should only be called on the server side.
-;; (defun repaint-canvas (mirror)
-;;   (gfg:draw-image (mirror-gcontext mirror) (canvas mirror) *origin*))
+;; (defmethod initialize-instance :after ((panel gfw-panel) &rest initargs)
+;;   ;(gfs::set-bk-mode (gfs:handle panel) gfs::+transparent+)
+;;   (let ((gc (make-graphics-context panel)))
+;;     (setf (gfg:background-color gc)
+;; 	  (ink-to-color (sheet-medium (sheet panel)) +background-ink+))))
 
 (defclass sheet-event-dispatcher (gfw:event-dispatcher)
   ((port
@@ -188,17 +182,41 @@ to track this information manually.")
     (t
      +white+)))
 
+;;; This function should only be called in graphics-forms-server thread
+(defun ink-to-color (medium ink)
+  (cond
+    ((subtypep (class-of ink) (find-class 'climi::opacity))
+     (setf ink (medium-foreground medium))) ; see discussion of opacity in design.lisp
+    ((eql ink +foreground-ink+)
+     (setf ink (medium-foreground medium)))
+    ((eql ink +background-ink+)
+     (setf ink (medium-background medium)))
+    ((eql ink +flipping-ink+)
+     (warn "+flipping-ink+ encountered in ink-to-color~%")
+     (setf ink nil)))
+  (if ink
+      (multiple-value-bind (red green blue) (clim:color-rgb ink)
+	(gfg:make-color :red (min (truncate (* red 256)) 255)
+			:green (min (truncate (* green 256)) 255)
+			:blue (min (truncate (* blue 256)) 255)))
+      (progn (debug-prin1 "nononono")
+       (with-server-graphics-context (gc (target-of medium))
+	 (gfg:background-color gc)))))
+
 (defmethod gfw:event-paint ((self sheet-event-dispatcher) mirror gc rect)
   (let ((sheet (sheet mirror)))
-    (when (and (typep sheet 'sheet-with-medium-mixin))
-      (let ((c (absolute-ink-to-color (sheet-desired-ink sheet))))
+    (when (and (typep sheet 'sheet-with-medium-mixin)
+;               (not (image-of (sheet-medium sheet)))
+	       )
+      (let ((c (ink-to-color (sheet-medium sheet)
+                             (sheet-desired-ink sheet))))
         (setf (gfg:background-color gc) c
-              (gfg:foreground-color gc) c)
-	(gfg:draw-filled-rectangle gc rect)))
+              (gfg:foreground-color gc) c))
+      (gfg:draw-filled-rectangle gc rect))
     (server-add-event
      (make-instance 'window-repaint-event
-		    :sheet sheet
-		    :region (translate-rectangle rect)))))
+    		    :sheet sheet
+    		    :region (translate-rectangle rect)))))
 
 ;;; This function should only be called in graphics-forms-server thread
 (defun generate-configuration-event (mirror pnt size)
@@ -212,6 +230,11 @@ to track this information manually.")
 (defmethod gfw:event-resize ((self sheet-event-dispatcher) mirror size type)
   (declare (ignore type))
   (setf size (gfw:client-size mirror))
+  (let ((sheet (sheet mirror)))
+    (if (and sheet (subtypep (class-of sheet) 'sheet-with-medium-mixin))
+        (let ((medium (climi::sheet-medium sheet)))
+          (when (and medium (image-of medium))
+            (resize-medium-buffer medium size)))))
   (server-add-event
    (generate-configuration-event mirror (gfw:location mirror) size)))
 
@@ -230,44 +253,44 @@ to track this information manually.")
 
 (defmethod gfw:event-mouse-move
     ((self sheet-event-dispatcher) mirror point button)
-  (let ((graft-point (gfw:translate-point mirror :display point)))
-   (server-add-event 
-    (make-instance 'pointer-motion-event
-		   :pointer 0
-		   :sheet (sheet mirror)
-		   :x (gfs:point-x point)
-		   :y (gfs:point-y point)
-		   :button (translate-button-name button)
-		   :graft-x (gfs:point-x graft-point)
-		   :graft-y (gfs:point-y graft-point)
-		   :modifier-state 0))))
+  (server-add-event 
+   (make-instance 'pointer-motion-event
+		  :pointer 0
+		  :sheet (sheet mirror)
+		  :x (gfs:point-x point)
+		  :y (gfs:point-y point)
+		  :button (translate-button-name button)
+		  ;; FIXME:
+;;; 		       :graft-x
+;;; 		       :graft-y
+		  :modifier-state 0)))
 
 (defmethod gfw:event-mouse-down ((self sheet-event-dispatcher) mirror point button)
   (setf *graphic-forms-mouse-down-sheet* (sheet mirror))
-  (let ((graft-point (gfw:translate-point mirror :display point)))
-    (server-add-event 
-     (make-instance 'pointer-button-press-event
-		    :pointer 0
-		    :sheet *graphic-forms-mouse-down-sheet*
-		    :x (gfs:point-x point)
-		    :y (gfs:point-y point)
-		    :button (translate-button-name button)
-		    :graft-x (gfs:point-x graft-point)
-		    :graft-y (gfs:point-y graft-point)
-		    :modifier-state 0))))
+  (server-add-event 
+   (make-instance 'pointer-button-press-event
+		  :pointer 0
+		  :sheet *graphic-forms-mouse-down-sheet*
+		  :x (gfs:point-x point)
+		  :y (gfs:point-y point)
+		  :button (translate-button-name button)
+		  ;; FIXME:
+;;; 		       :graft-x
+;;; 		       :graft-y
+		  :modifier-state 0)))
 
 (defmethod gfw:event-mouse-up ((self sheet-event-dispatcher) mirror point button)
-  (let ((graft-point (gfw:translate-point mirror :display point)))
-    (server-add-event 
-     (make-instance 'pointer-button-release-event
-		    :pointer 0
-		    :sheet *graphic-forms-mouse-down-sheet*
-		    :x (gfs:point-x point)
-		    :y (gfs:point-y point)
-		    :button (translate-button-name button)
-		    :graft-x (gfs:point-x graft-point)
-		    :graft-y (gfs:point-y graft-point)
-		    :modifier-state 0)))
+  (server-add-event 
+   (make-instance 'pointer-button-release-event
+		  :pointer 0
+		  :sheet *graphic-forms-mouse-down-sheet*
+		  :x (gfs:point-x point)
+		  :y (gfs:point-y point)
+		  :button (translate-button-name button)
+		  ;; FIXME:
+;;; 		       :graft-x
+;;; 		       :graft-y
+		  :modifier-state 0))
   (setf *graphic-forms-mouse-down-sheet* nil))
 
 (defun char-to-sym (char)
@@ -316,27 +339,21 @@ to track this information manually.")
 		  )))
 
 (defmethod gfw:event-mouse-enter ((self sheet-event-dispatcher) mirror point button)
-  (let ((graft-point (gfw:translate-point mirror :display point)))
-    (server-add-event
-     (make-instance 'pointer-enter-event
-		    :pointer 0
-		    :sheet (sheet mirror)
-		    :x (gfs:point-x point)
-		    :y (gfs:point-y point)
-		    :graft-x (gfs:point-x graft-point)
-		    :graft-y (gfs:point-y graft-point)
-		    :button (translate-button-name button)
-		    :modifier-state 0))))
+  (server-add-event
+   (make-instance 'pointer-enter-event
+		  :pointer 0
+		  :sheet (sheet mirror)
+		  :x (gfs:point-x point)
+		  :y (gfs:point-y point)
+		  :button (translate-button-name button)
+		  :modifier-state 0)))
 
 (defmethod gfw:event-mouse-exit ((self sheet-event-dispatcher) mirror point button)
-  (let ((graft-point (gfw:translate-point mirror :display point)))
-    (server-add-event
-     (make-instance 'pointer-exit-event
-		    :pointer 0
-		    :sheet (sheet mirror)
-		    :x (gfs:point-x point)
-		    :y (gfs:point-y point)
-		    :graft-x (gfs:point-x graft-point)
-		    :graft-y (gfs:point-y graft-point)
-		    :button (translate-button-name button)
-		    :modifier-state 0))))
+  (server-add-event
+   (make-instance 'pointer-exit-event
+		  :pointer 0
+		  :sheet (sheet mirror)
+		  :x (gfs:point-x point)
+		  :y (gfs:point-y point)
+		  :button (translate-button-name button)
+		  :modifier-state 0)))

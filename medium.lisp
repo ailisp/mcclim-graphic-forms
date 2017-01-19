@@ -29,12 +29,11 @@
 (defun render-medium-buffer (medium)
   (let ((mirror (climi::port-lookup-mirror (port-of medium) (medium-sheet medium))))
     (with-server-graphics-context (gc mirror)
-      (debug-prin1 (medium-sheet medium))
       (<+ `(gfg:draw-image ,gc ,(image-of medium) ,*medium-origin*)))))
 
 (defun render-pending-mediums ()
   (loop for medium in *mediums-to-render*
-     do (render-medium-buffer medium))
+        do (render-medium-buffer medium))
   (setf *mediums-to-render* nil))
 
 ;;; FIXME: For gf-toplevel-sheet-pane, the sheet-region is incorrect, it should be modify to the
@@ -413,29 +412,26 @@
                               start end
                               align-x align-y
                               toward-x toward-y transform-glyphs)
-
   (declare (ignore align-x align-y toward-x toward-y transform-glyphs))
   (when (%target-of medium)
     (sync-text-style medium
                      (merge-text-styles (medium-text-style medium)
                                         (medium-default-text-style medium)))
     (setf string (normalize-text-data string))
-    (climi::with-transformed-position ((sheet-native-transformation
-					(medium-sheet medium)) x y)
-      (with-server-graphics-context (gc (%target-of medium))
-	(%set-gc-clipping-region medium gc)
-	(let ((font (font-of medium))
-	      (color (ink-to-color medium (medium-ink medium)))) ;ink-to-color here is questionable? server thread color obj?
-	  (<+ `(setf (gfg:foreground-color ,gc) ,color))
-	  (if font
-	      (<+ `(setf (gfg:font ,gc) ,font)))
-	  (let ((ascent (<+ `(gfg:ascent (gfg:metrics ,gc ,font))))
-		(x (floor x))
-		(y (floor y)))
-	    (<+ `(gfg:draw-text ,gc
-				,(subseq string start (or end (length string)))
-				(gfs:make-point :x ,x :y ,(- y ascent))
-				'(:transparent)))))))
+    (with-server-graphics-context (gc (%target-of medium))
+      (%set-gc-clipping-region medium gc)
+      (let ((font (font-of medium))
+	    (color (ink-to-color medium (medium-ink medium)))) ;ink-to-color here is questionable? server thread color obj?
+	(<+ `(setf (gfg:foreground-color ,gc) ,color))
+	(if font
+	    (<+ `(setf (gfg:font ,gc) ,font)))
+	(let ((ascent (<+ `(gfg:ascent (gfg:metrics ,gc ,font))))
+	      (x (floor x))
+	      (y (floor y)))
+	  (<+ `(gfg:draw-text ,gc
+			      ,(subseq string start (or end (length string)))
+			      (gfs:make-point :x ,x :y ,(- y ascent))
+			      '(:transparent))))))
     (add-medium-to-render medium)))
 
 (defmethod medium-buffering-output-p ((medium graphic-forms-medium))
