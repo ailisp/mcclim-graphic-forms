@@ -7,13 +7,10 @@
    (image
     :accessor image-of
     :initform nil)
-   (port ; this seems surplus
-    :accessor port-of
-    :initarg :port
-    :initform nil)
    ;;; Copy from CLX
-   (clipping-region-tmp :initform (vector 0 0 0 0)
-     :documentation "This object is reused to avoid consing in the
+   (clipping-region-tmp
+    :initform (vector 0 0 0 0)
+    :documentation "This object is reused to avoid consing in the
  most common case when configuring the clipping region.")))
 
 (defvar *medium-origin*     (<+ `(gfs:make-point)))
@@ -27,7 +24,7 @@
   (setf *mediums-to-render* (remove medium *mediums-to-render*)))
 
 (defun render-medium-buffer (medium)
-  (let ((mirror (climi::port-lookup-mirror (port-of medium) (medium-sheet medium))))
+  (let ((mirror (climi::port-lookup-mirror (port (medium-sheet medium)) (medium-sheet medium))))
     (with-server-graphics-context (gc mirror)
       (<+ `(gfg:draw-image ,gc ,(image-of medium) ,*medium-origin*)))))
 
@@ -36,8 +33,6 @@
         do (render-medium-buffer medium))
   (setf *mediums-to-render* nil))
 
-;;; FIXME: For gf-toplevel-sheet-pane, the sheet-region is incorrect, it should be modify to the
-;;; actual window size in apropriate place
 (defun %target-of (medium)
   (let ((sheet (medium-sheet medium)))
     (or (image-of medium)
@@ -80,19 +75,11 @@
       (<+ `(gfs:dispose ,font)))
     (setf (font-of medium) nil)))
 
-(defun normalize-text-data (text)
-  (etypecase text
-    (string    text)
-    (character (string text))
-    (symbol    (symbol-name text))))
-
-(defmethod climi::port-lookup-mirror ((port basic-port) sheet)
-  (declare (ignore sheet))
-  nil)
-
-(defun sync-text-style (medium text-style)
+
+;;; CLIM text-style and Windows native font object mapping
+(defun update-medium-font (medium text-style)
   (with-server-graphics-context
-      (gc (climi::port-lookup-mirror (port-of medium) (medium-sheet medium)))
+      (gc (climi::port-lookup-mirror (port (medium-sheet medium)) (medium-sheet medium)))
     (let* ((old-data
 	    (when (font-of medium)
 	      (<+ `(gfg:data-object ,(font-of medium) ,gc))))
@@ -103,48 +90,67 @@
 	  (setf (font-of medium) nil))
 	(setf (font-of medium) new-font)))))
 
+(defun normalize-text-data (text)
+  (etypecase text
+    (string    text)
+    (character (string text))
+    (symbol    (symbol-name text))))
+
+(defparameter *text-style-family-to-font-family-map*
+  '((:fix . "Lucida Console")
+    (:fixed . "Lucida Console")
+    (:serif . "Times New Roman")
+    (:sans-serif . "Arial")))
+
+(defun text-style-family-to-font-family (family)
+  (if (stringp family)
+      family
+      (or (cdr (assoc family *text-style-family-to-font-family-map*))
+	  (error "Can't find font family for face name ~s.~%" family))))
+
+(defparameter *text-style-size-to-font-size-map*
+  '((:tiny       .  6)
+    (:very-small .  7)
+    (:small      .  8)
+    (:normal     . 10)
+    (:large      . 12)
+    (:very-large . 14)
+    (:huge       . 16)))
+
+(defparameter *default-font-size* 10)
+
+(defun text-style-size-to-font-size (size)
+  (or (cdr (assoc size *text-style-size-to-font-size-map*))
+      *default-font-size*))
+
+;;family can decide fixed or normal, in CLIM is belongs to face
+(defun text-style-face-to-font-face (face family) 
+  (let ((style nil))
+    (pushnew (case face
+	       ((:bold :bold-italic :bold-oblique :italic-bold :oblique-bold)
+		:bold)
+	       (otherwise
+		:normal))
+	     style)
+    (pushnew (case face
+	       ((:bold-italic :italic :italic-bold)
+		:italic)
+	       (otherwise
+		:normal))
+	     style)
+    (pushnew (case family
+	       ((:fix :fixed) :fixed)
+	       (otherwise     :normal))
+	     style)
+    style))
+
 (defun text-style-to-font (gc text-style old-data)
   (multiple-value-bind (family face size)
       (text-style-components (merge-text-styles text-style *default-text-style*))
-    #+nil (gfs::debug-format "family: ~a  face: ~a  size: ~a~%" family face size)
-    ;;
     ;; FIXME: what to do about font data char sets?
-    ;;
-    ;; FIXME: externalize these specific choices so that applications can
-    ;; have better control over them
-    ;;
-    (let ((face-name (if (stringp family)
-                         family
-                         (ecase family
-                           ((:fix :fixed) "Lucida Console")
-                           (:serif        "Times New Roman")
-                           (:sans-serif    "Arial"))))
-          (pnt-size (case size
-                      (:tiny       6)
-                      (:very-small 7)
-                      (:small      8)
-                      (:normal     10)
-                      (:large      12)
-                      (:very-large 14)
-                      (:huge       16)
-                      (otherwise   10)))
-          (style nil))
-      (pushnew (case face
-                 ((:bold :bold-italic :bold-oblique :italic-bold :oblique-bold)
-                  :bold)
-                 (otherwise
-                  :normal))
-               style)
-      (pushnew (case face
-                 ((:bold-italic :italic :italic-bold)
-                  :italic)
-                 (otherwise
-                  :normal))
-               style)
-      (pushnew (case family
-                 ((:fix :fixed) :fixed)
-                 (otherwise     :normal))
-               style)
+    (let ((face-name (text-style-family-to-font-family family))
+          (pnt-size  (text-style-size-to-font-size size))
+          (style     (text-style-face-to-font-face face family)))
       (if (or (null old-data)
               (not (eql pnt-size (<+ `(gfg:font-data-point-size ,old-data))))
               (string-not-equal face-name (<+ `(gfg:font-data-face-name ,old-data)))
@@ -157,9 +163,8 @@
           (<+ `(make-instance 'gfg:font :gc ,gc :data ,old-data))))))
 
 (defmethod (setf medium-text-style) :before (text-style (medium graphic-forms-medium))
-  (sync-text-style medium
-                   (merge-text-styles (medium-text-style medium)
-                                      (medium-default-text-style medium))))
+  (update-medium-font medium (merge-text-styles text-style
+						(medium-default-text-style medium))))
 
 (defmethod (setf medium-line-style) :before (line-style (medium graphic-forms-medium))
   ())
@@ -383,13 +388,12 @@
       1)))
 
 (defmethod text-size ((medium graphic-forms-medium) string &key text-style (start 0) end)
-  (unless text-style
-    (setf text-style (medium-text-style medium)))
+  (if text-style
+      (setf text-style
+	    (merge-text-styles text-style (medium-default-text-style medium)))
+      (setf text-style (medium-text-style medium)))
+  (update-medium-font medium text-style)
   (setf string (normalize-text-data string))
-  (setf text-style
-        (merge-text-styles text-style (medium-default-text-style medium)))
-  (sync-text-style medium text-style)
-
   (with-server-graphics-context (gc (%target-of medium))
     (let ((font (font-of medium)))
       (<+ `(setf (gfg:font ,gc) ,font))
@@ -414,9 +418,9 @@
                               toward-x toward-y transform-glyphs)
   (declare (ignore align-x align-y toward-x toward-y transform-glyphs))
   (when (%target-of medium)
-    (sync-text-style medium
-                     (merge-text-styles (medium-text-style medium)
-                                        (medium-default-text-style medium)))
+    (update-medium-font medium
+			(merge-text-styles (medium-text-style medium)
+					   (medium-default-text-style medium)))
     (setf string (normalize-text-data string))
     (with-server-graphics-context (gc (%target-of medium))
       (%set-gc-clipping-region medium gc)
