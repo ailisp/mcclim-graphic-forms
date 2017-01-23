@@ -43,14 +43,19 @@
 		(<+ `(make-instance 'gfg:image
 				    :size (gfs:make-size :width ,width :height ,height))))))))
 
-(defmacro with-graphic-forms-medium ((gc medium) &body body)
-  (let ((g gc)
-	(m medium))
-    `(when (%target-of ,m)
-       (with-server-graphics-context (,g (%target-of ,m))
-	 (%set-gc-clipping-region ,m ,g)
-	 ,@body)
-       (add-medium-to-render ,m))))
+(defun %set-gc-foreground-background (medium gc &optional ink)
+  (let ((color (ink-to-color medium (or ink (medium-ink medium)))))
+    (<+ `(setf (gfg:background-color ,gc) ,color 
+	       (gfg:foreground-color ,gc) ,color))))
+
+(defmacro with-graphic-forms-medium ((gc medium &key (tr 'tr) ink) &body body)
+  `(when (%target-of ,medium)
+     (with-server-graphics-context (,gc (%target-of ,medium))
+       (%set-gc-clipping-region ,medium ,gc)
+       (%set-gc-foreground-background ,medium ,gc ,ink)
+       (let ((,tr (sheet-native-transformation (medium-sheet medium))))
+	 ,@body))
+     (add-medium-to-render ,medium)))
 
 ;;; This function should only be called in graphic-forms-server thread
 (defun resize-medium-buffer (medium size)
@@ -173,58 +178,49 @@
   (with-graphic-forms-medium (gc medium)
     (let ((color (ink-to-color medium (medium-ink medium))))
       (<+ `(setf (gfg:foreground-color ,gc) ,color)))
-    (let ((tr (sheet-native-transformation (medium-sheet medium))))
-      (climi::with-transformed-position (tr x y)
-	(<+ `(gfg:draw-point ,gc (gfs:make-point :x ,(floor x)
-						 :y ,(floor y))))))))
+    (climi::with-transformed-position (tr x y)
+      (<+ `(gfg:draw-point ,gc (gfs:make-point :x ,(floor x)
+					       :y ,(floor y)))))))
 
 (defmethod medium-draw-points* ((medium graphic-forms-medium) coord-seq)
   (with-graphic-forms-medium (gc medium)
     (let ((color (ink-to-color medium (medium-ink medium))))
       (<+ `(setf (gfg:foreground-color ,gc) ,color)))
-    (let ((tr (sheet-native-transformation (medium-sheet medium))))
-      (loop for (x y) on (coerce coord-seq 'list) by #'cddr do
-	   (climi::with-transformed-position (tr x y)
-	     (<+ `(gfg:draw-point ,gc
-				  (gfs:make-point :x ,(floor x)
-						  :y ,(floor y)))))))))
+    (loop for (x y) on (coerce coord-seq 'list) by #'cddr do
+	 (climi::with-transformed-position (tr x y)
+	   (<+ `(gfg:draw-point ,gc
+				(gfs:make-point :x ,(floor x)
+						:y ,(floor y))))))))
 
 (defmethod medium-draw-line* ((medium graphic-forms-medium) x1 y1 x2 y2)
   (with-graphic-forms-medium (gc medium)
     (let ((color (ink-to-color medium (medium-ink medium))))
       (<+ `(setf (gfg:foreground-color ,gc) ,color)))
-    (let ((tr (sheet-native-transformation (medium-sheet medium))))
-      (climi::with-transformed-position (tr x1 y1)
-	(climi::with-transformed-position (tr x2 y2)
-	  (<+ `(gfg:draw-line ,gc
-			      (gfs:make-point :x ,(floor x1)
-					      :y ,(floor y1))
-			      (gfs:make-point :x ,(floor x2)
-					      :y ,(floor y2)))))))))
+    (climi::with-transformed-position (tr x1 y1)
+      (climi::with-transformed-position (tr x2 y2)
+	(<+ `(gfg:draw-line ,gc
+			    (gfs:make-point :x ,(floor x1)
+					    :y ,(floor y1))
+			    (gfs:make-point :x ,(floor x2)
+					    :y ,(floor y2))))))))
 
 (defmethod medium-draw-lines* ((medium graphic-forms-medium) coord-seq)
   (with-graphic-forms-medium (gc medium)
     (let ((color (ink-to-color medium (medium-ink medium))))
       (<+ `(setf (gfg:foreground-color ,gc) ,color)))
-    (let ((tr (sheet-native-transformation (medium-sheet medium))))
-      (loop for (x1 y1 x2 y2) on (coerce coord-seq 'list) by #'cddddr do
-	   (climi::with-transformed-position (tr x1 y1)
-	     (climi::with-transformed-position (tr x2 y2)
-	       (<+ `(gfg:draw-line ,gc
-				   (gfs:make-point :x ,(floor x1)
-						   :y ,(floor y1))
-				   (gfs:make-point :x ,(floor x2)
-						   :y ,(floor y2))))))))))
+    (loop for (x1 y1 x2 y2) on (coerce coord-seq 'list) by #'cddddr do
+	 (climi::with-transformed-position (tr x1 y1)
+	   (climi::with-transformed-position (tr x2 y2)
+	     (<+ `(gfg:draw-line ,gc
+				 (gfs:make-point :x ,(floor x1)
+						 :y ,(floor y1))
+				 (gfs:make-point :x ,(floor x2)
+						 :y ,(floor y2)))))))))
 
 (defmethod medium-draw-polygon* ((medium graphic-forms-medium) coord-seq closed filled)
   (with-graphic-forms-medium (gc medium)
-    (climi::with-transformed-positions
-	((sheet-native-transformation (medium-sheet medium)) coord-seq)
-      (let ((points-list (coordinates->points coord-seq))
-	    (color (ink-to-color medium (medium-ink medium))))
-	(if filled
-	    (<+ `(setf (gfg:background-color ,gc) ,color)))
-	(<+ `(setf (gfg:foreground-color ,gc) ,color))
+    (climi::with-transformed-positions (tr coord-seq)
+      (let ((points-list (coordinates->points coord-seq)))
 	(when (and closed (not filled))
 	  (push (car (last points-list)) points-list))
 	(if filled
@@ -233,36 +229,26 @@
 
 (defmethod medium-draw-rectangle* ((medium graphic-forms-medium) left top right bottom filled)
   (with-graphic-forms-medium (gc medium)
-    (let ((tr (sheet-native-transformation (medium-sheet medium))))
-      (climi::with-transformed-position (tr left top)
-	(climi::with-transformed-position (tr right bottom)
-	  (let ((rect (coordinates->rectangle left top right bottom))
-		(color (ink-to-color medium (medium-ink medium))))
-	    (if filled
-		(<+ `(setf (gfg:background-color ,gc) ,color)))
-	    (<+ `(setf (gfg:foreground-color ,gc) ,color))
-	    (if filled
-		(<+ `(gfg:draw-filled-rectangle ,gc ,rect))
-		(<+ `(gfg:draw-rectangle ,gc ,rect)))))))))
+    (climi::with-transformed-position (tr left top)
+      (climi::with-transformed-position (tr right bottom)
+	(let ((rect (coordinates->rectangle left top right bottom)))
+	  (if filled
+	      (<+ `(gfg:draw-filled-rectangle ,gc ,rect))
+	      (<+ `(gfg:draw-rectangle ,gc ,rect))))))))
 
 (defmethod medium-draw-rectangles* ((medium graphic-forms-medium) position-seq filled)
   (with-graphic-forms-medium (gc medium)
-    (let ((tr (sheet-native-transformation (medium-sheet medium)))
-	  (color (ink-to-color medium (medium-ink medium))))
-      (if filled
-	  (<+ `(setf (gfg:background-color ,gc) ,color)))
-      (<+ `(setf (gfg:foreground-color ,gc) ,color))
-      (loop for i below (length position-seq) by 4 do
-	   (let ((x1 (floor (elt position-seq (+ i 0))))
-		 (y1 (floor (elt position-seq (+ i 1))))
-		 (x2 (floor (elt position-seq (+ i 2))))
-		 (y2 (floor (elt position-seq (+ i 3)))))
-	     (climi::with-transformed-position (tr x1 y1)
-	       (climi::with-transformed-position (tr x2 y2)
-		 (let ((rect (coordinates->rectangle x1 y1 x2 y2)))
-		   (if filled
-		       (<+ `(gfg:draw-filled-rectangle ,gc ,rect))
-		       (<+ `(gfg:draw-rectangle ,gc ,rect)))))))))))
+    (loop for i below (length position-seq) by 4 do
+	 (let ((x1 (floor (elt position-seq (+ i 0))))
+	       (y1 (floor (elt position-seq (+ i 1))))
+	       (x2 (floor (elt position-seq (+ i 2))))
+	       (y2 (floor (elt position-seq (+ i 3)))))
+	   (climi::with-transformed-position (tr x1 y1)
+	     (climi::with-transformed-position (tr x2 y2)
+	       (let ((rect (coordinates->rectangle x1 y1 x2 y2)))
+		 (if filled
+		     (<+ `(gfg:draw-filled-rectangle ,gc ,rect))
+		     (<+ `(gfg:draw-rectangle ,gc ,rect))))))))))
 
 (defun compute-quad-point (center-x height angle)
   (let* ((opp-len (/ height 2))
@@ -309,13 +295,8 @@
               (= radius-1-dx radius-2-dy 0))
     (error "MEDIUM-DRAW-ELLIPSE* not for non axis-aligned ellipses."))
   (with-graphic-forms-medium (gc medium)
-    (let ((color (ink-to-color medium (medium-ink medium))))
-      (if filled
-	  (<+ `(setf (gfg:background-color ,gc) ,color)))
-      (<+ `(setf (gfg:foreground-color ,gc) ,color)))
     (climi::with-transformed-position
-	((sheet-native-transformation (medium-sheet medium))
-	 center-x center-y)
+	(tr center-x center-y)
       (let* ((width (abs (+ radius-1-dx radius-2-dx)))
 	     (height (abs (+ radius-1-dy radius-2-dy)))
 	     (min-x (floor (- center-x width)))
@@ -458,15 +439,12 @@
     (render-medium-buffer medium)))
 
 (defmethod medium-clear-area ((medium graphic-forms-medium) left top right bottom)
-  (with-graphic-forms-medium (gc medium)
-    (let ((rect (coordinates->rectangle left top right bottom))
-	  (color (ink-to-color medium (medium-background medium))))
-      (<+ `(setf (gfg:background-color ,gc) ,color 
-		 (gfg:foreground-color ,gc) ,color))
+  (with-graphic-forms-medium (gc medium :ink (medium-background medium))
+    (let ((rect (coordinates->rectangle left top right bottom)))
       (<+ `(gfg:draw-filled-rectangle ,gc ,rect)))))
 
 (defmethod medium-beep ((medium graphic-forms-medium))
-  ())
+  (<+ `(gfs::beep 750 300)))
 
 (defmethod invoke-with-special-choices (continuation (medium graphic-forms-medium))
   (let ((sheet (medium-sheet medium)))

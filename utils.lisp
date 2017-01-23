@@ -1,8 +1,19 @@
 (in-package :clim-graphic-forms)
 
+;; (defcfun
+;;   ("AdjustWindowRectEx" adjust-window-rect)
+;;   BOOL
+;;   (rect LPTR)
+;;   (style LONG)
+;;   (menu BOOL)
+;;   (exstyle LONG))
+
+(defun client-size-to-window-size-simple (size)
+  ())
+
 (defun requirement->size (req)
-  (<+ `(gfs:make-size :width ,(floor (space-requirement-width req))
-		      :height ,(floor (space-requirement-height req)))))
+  (gfs:make-size :width (floor (space-requirement-width req))
+		 :height (floor (space-requirement-height req))))
 
 ;;; This function should only be called in graphics-forms-server thread
 (defun translate-rectangle (gfw-rect)

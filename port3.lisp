@@ -81,11 +81,14 @@
 ;;;
 
 (defmethod realize-mirror ((port graphic-forms-port) (sheet graphic-forms-top-level-sheet-pane))
-  (let* ((mirror (<+ `(make-instance 'gfw-top-level
+  (let* ((q (compose-space sheet))
+	 (mirror (<+ `(make-instance 'gfw-top-level
 				     :sheet ,sheet
 				     :dispatcher ,*sheet-dispatcher*
 				     :style '(:workspace)
-				     :text ,(frame-pretty-name (pane-frame sheet))))))
+				     :text ,(frame-pretty-name (pane-frame sheet))
+				     ;; TODO in GRAPHIC-FORMS: this minsize is client size, should convert to window size
+				     :minimum-size ,(requirement->size q)))))
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
 
