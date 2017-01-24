@@ -73,7 +73,8 @@
 					   concrete-pane-class))
 	   (concrete-mirrored-pane-class (concatenate 'string
 						      "GRAPHIC-FORMS-"
-						      (symbol-name concrete-pane-class-symbol)))
+						      (symbol-name concrete-pane-class-symbol)
+						      "-DUMMY"))
 	   (concrete-mirrored-pane-class-symbol (find-symbol concrete-mirrored-pane-class
 							     :clim-gf)))
       (unless concrete-mirrored-pane-class-symbol

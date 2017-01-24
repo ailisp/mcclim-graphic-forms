@@ -13,7 +13,7 @@
   ((screen
     :accessor graphic-forms-port-screen
     :initform nil)
-   (pointer
+   (pointer 
     :reader port-pointer
     :initform nil)))
 
@@ -71,20 +71,18 @@
 	       (gfs:make-point :x ,(floor x)
 			       :y ,(floor y))))))
 
-(defclass graphic-forms-top-level-sheet-pane (standard-full-mirrored-sheet-mixin
-					      permanent-medium-sheet-output-mixin
-					      climi::top-level-sheet-pane)
-  ())
-
 ;;;
 ;;; sheet methods
 ;;;
 
-(defmethod realize-mirror ((port graphic-forms-port) (sheet graphic-forms-top-level-sheet-pane))
+(defmethod realize-mirror ((port graphic-forms-port) (sheet graphic-forms-pane-mixin))
+  (%realize-mirror port sheet))
+
+(defmethod %realize-mirror ((port graphic-forms-port) (sheet climi::top-level-sheet-pane))
   (let* ((q (compose-space sheet))
 	 (mirror (<+ `(make-instance 'gfw-top-level
 				     :sheet ,sheet
-				     :dispatcher ,*sheet-dispatcher*
+				     :dispatcher (make-instance 'sheet-event-dispatcher)
 				     :style '(:workspace)
 				     :text ,(frame-pretty-name (pane-frame sheet))
 				     ;; TODO in GRAPHIC-FORMS: this minsize is client size, should convert to window size
@@ -92,7 +90,20 @@
     (climi::port-register-mirror (port sheet) sheet mirror)
     mirror))
 
-(defmethod realize-mirror ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
+(defmethod %realize-mirror ((port graphic-forms-port) (sheet climi::unmanaged-top-level-sheet-pane))
+  (let* ((q (compose-space sheet))
+	 (mirror (<+ `(make-instance 'gfw-top-level
+				     :sheet ,sheet
+				     :dispatcher (make-instance 'sheet-event-dispatcher)
+				     :style '(:borderless)
+				     :text ,(frame-pretty-name (pane-frame sheet))
+				     :minimum-size ,(requirement->size q)))))
+
+    (climi::port-register-mirror (port sheet) sheet mirror)
+        (port-enable-sheet port sheet)
+    mirror))
+
+(defmethod %realize-mirror ((port graphic-forms-port) (sheet basic-sheet))
   (let* ((parent (sheet-mirror (sheet-parent sheet)))
          (mirror (<+ `(make-instance 'gfw-panel
 				     :sheet ,sheet

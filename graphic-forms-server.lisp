@@ -141,16 +141,12 @@ to track this information manually.")
 
 (defclass gfw-top-level (gfw:top-level gf-mirror-mixin) ()
   (:documentation "Server side top level window"))
-;; (defclass gfw-panel (gfg:image gf-mirror-mixin) ()
-;;   (:documentation "Server side gadgets"))
+
 (defclass gfw-panel (gfw:panel gf-mirror-mixin) ()
   (:documentation "Server side gadgets"))
 
-;; (defmethod initialize-instance :after ((panel gfw-panel) &rest initargs)
-;;   ;(gfs::set-bk-mode (gfs:handle panel) gfs::+transparent+)
-;;   (let ((gc (make-graphics-context panel)))
-;;     (setf (gfg:background-color gc)
-;; 	  (ink-to-color (sheet-medium (sheet panel)) +background-ink+))))
+(defclass gfw-window (gfw:window gf-mirror-mixin) ()
+  (:documentation "Server side window for unmanaged-top-level-sheet-panes"))
 
 (defclass sheet-event-dispatcher (gfw:event-dispatcher)
   ((port
