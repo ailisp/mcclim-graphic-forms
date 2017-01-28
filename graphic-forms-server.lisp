@@ -96,21 +96,8 @@ to track this information manually.")
     (otherwise (let ((result (eval command)))
 		 result))))
 
-;;; This return should be free via gfs:dispose
-(defun make-graphics-context (&optional thing)
-  (cond
-    ((null thing)
-     (make-instance 'gfg:graphics-context))
-    ((typep thing 'gfw:widget)
-     (make-instance 'gfg:graphics-context :widget thing))
-    ((typep thing 'gfg:image)
-     (make-instance 'gfg:graphics-context :image thing))
-    (t
-     (error 'gfs:toolkit-error
-	    :detail (format nil "~a is an unsupported type" thing)))))
-
 (defmacro with-server-graphics-context ((gc &optional thing) &body body)
-  `(let ((,gc (<+ `(make-graphics-context ,,thing))))
+  `(let ((,gc (<+ `(gfg:make-graphics-context ,,thing))))
      (unwind-protect
 	  (progn
 	    ,@body)
@@ -243,6 +230,7 @@ to track this information manually.")
     (:left-button +pointer-left-button+)
     (:right-button +pointer-right-button+)
     (:middle-button +pointer-middle-button+)
+    ((nil) nil)
     (t
      (warn "unknown button name: ~A" name)
      nil)))
@@ -335,6 +323,7 @@ to track this information manually.")
 		  )))
 
 (defmethod gfw:event-mouse-enter ((self sheet-event-dispatcher) mirror point button)
+;  (debug-prin1 "enter" (translate-button-name button))
   (server-add-event
    (make-instance 'pointer-enter-event
 		  :pointer 0
@@ -345,6 +334,7 @@ to track this information manually.")
 		  :modifier-state 0)))
 
 (defmethod gfw:event-mouse-exit ((self sheet-event-dispatcher) mirror point button)
+;  (debug-prin1 "exit " (translate-button-name button))
   (server-add-event
    (make-instance 'pointer-exit-event
 		  :pointer 0

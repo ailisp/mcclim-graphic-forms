@@ -71,9 +71,8 @@
 	       (gfs:make-point :x ,(floor x)
 			       :y ,(floor y))))))
 
-;;;
+
 ;;; sheet methods
-;;;
 
 (defmethod realize-mirror ((port graphic-forms-port) (sheet graphic-forms-pane-mixin))
   (%realize-mirror port sheet))
@@ -82,7 +81,7 @@
   (let* ((q (compose-space sheet))
 	 (mirror (<+ `(make-instance 'gfw-top-level
 				     :sheet ,sheet
-				     :dispatcher (make-instance 'sheet-event-dispatcher)
+				     :dispatcher *sheet-dispatcher*
 				     :style '(:workspace)
 				     :text ,(frame-pretty-name (pane-frame sheet))
 				     ;; TODO in GRAPHIC-FORMS: this minsize is client size, should convert to window size
@@ -94,7 +93,7 @@
   (let* ((q (compose-space sheet))
 	 (mirror (<+ `(make-instance 'gfw-top-level
 				     :sheet ,sheet
-				     :dispatcher (make-instance 'sheet-event-dispatcher)
+				     :dispatcher *sheet-dispatcher*
 				     :style '(:borderless)
 				     :text ,(frame-pretty-name (pane-frame sheet))
 				     :minimum-size ,(requirement->size q)))))
@@ -104,10 +103,11 @@
     mirror))
 
 (defmethod %realize-mirror ((port graphic-forms-port) (sheet basic-sheet))
+  "%REALIZE-MIRROR for all other sheets (except methods specified above."
   (let* ((parent (sheet-mirror (sheet-parent sheet)))
          (mirror (<+ `(make-instance 'gfw-panel
 				     :sheet ,sheet
-				     :dispatcher ,*sheet-dispatcher*
+				     :dispatcher *sheet-dispatcher*
 				     :style '()
 				     :parent ,parent))))
     (climi::port-register-mirror (port sheet) sheet mirror)
@@ -117,6 +117,39 @@
   (let ((mirror (climi::port-lookup-mirror port sheet)))
     (climi::port-unregister-mirror port sheet mirror)
     (<- `(gfs:dispose ,mirror))))
+
+
+;;; pixmap
+
+(defmethod realize-mirror ((port graphic-forms-port) (pixmap climi::pixmap))
+  (when (null (climi::port-lookup-mirror port pixmap))
+    (let* ((pix (<+ `(make-instance 'gfg:image
+				    :size
+				    (gfs:make-size
+				     :width ,(round (pixmap-width pixmap))
+				     :height ,(round (pixmap-height pixmap)))))))
+      (climi::port-register-mirror port pixmap pix))
+    (values)))
+
+(defmethod destroy-mirror ((port graphic-forms-port) (pixmap climi::pixmap))
+  (when (climi::port-lookup-mirror port pixmap)
+    (<- `(gfs:dispose ,(climi::port-lookup-mirror port pixmap)))
+    (climi::port-unregister-mirror port pixmap (climi::port-lookup-mirror port pixmap))))
+
+(defmethod port-allocate-pixmap ((port graphic-forms-port) sheet width height)
+  (let ((pixmap (make-instance 'climi::mirrored-pixmap
+			       :sheet sheet
+			       :width width
+			       :height height
+			       :port port)))
+    (when (sheet-grafted-p sheet)
+      (realize-mirror port pixmap))
+    pixmap))
+
+(defmethod port-deallocate-pixmap ((port graphic-forms-port) pixmap)
+  (when (climi::port-lookup-mirror port pixmap)
+    (destroy-mirror port pixmap)))
+
 
 (defmethod port-enable-sheet ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
   (<- `(gfw:show ,(climi::port-lookup-mirror port sheet) t)))
@@ -145,10 +178,15 @@
   (render-pending-mediums))
 
 (defmethod make-graft ((port graphic-forms-port) &key (orientation :default) (units :device))
-  (let ((result (make-instance 'graphic-forms-graft
+  (let ((graft (make-instance 'graphic-forms-graft
 			       :port port :mirror (gensym)
 			       :orientation orientation :units units)))
-    result))
+    (setf (sheet-region graft)
+	  (make-bounding-rectangle 0 0
+				   (graft-width graft)
+				   (graft-height graft)))
+    (push graft (climi::port-grafts port))
+    graft))
 
 (defmethod make-medium ((port graphic-forms-port) sheet)
   (make-instance 'graphic-forms-medium :port port :sheet sheet))
@@ -162,11 +200,9 @@
      (text-style text-style) &optional character-set)
   ())
 
-(defmethod port-character-width ((port graphic-forms-port) text-style char)
-  #+nil (<- `(gfs::debug-format "port-character-width called: ~a ~c~%" ,text-style ,char)))
+(defmethod port-character-width ((port graphic-forms-port) text-style char))
 
-(defmethod port-string-width ((port graphic-forms-port) text-style string &key (start 0) end)
-  #+nil (<- `(gfs::debug-format "port-string-width called: ~a ~c~%" ,text-style ,string)))
+(defmethod port-string-width ((port graphic-forms-port) text-style string &key (start 0) end))
 
 (defmethod port-mirror-width ((port graphic-forms-port) (sheet standard-full-mirrored-sheet-mixin))
   (let ((mirror (climi::port-lookup-mirror port sheet)))
@@ -185,13 +221,6 @@
 (defmethod graft ((port graphic-forms-port))
   (first (climi::port-grafts port)))
 
-(defmethod port-allocate-pixmap ((port graphic-forms-port) sheet width height)
-  ())
-
-(defmethod port-deallocate-pixmap ((port graphic-forms-port) pixmap)
-  #+nil
-  (when (climi::port-lookup-mirror port pixmap)
-    (destroy-mirror port pixmap)))
 
 (defmethod pointer-position ((pointer gfw-pointer))
   (values (slot-value pointer 'x) (slot-value pointer 'y)))
@@ -217,20 +246,20 @@
   (<+ `(gfw:give-focus ,(sheet-mirror focus)))
   (setf (frame-properties frame 'focus) focus))
 
-(defmethod %set-port-keyboard-focus (focus (port graphic-forms-port) &key timestamp)
-  (declare (ignore timestamp))
-  ())
-
 (defmethod port-force-output ((port graphic-forms-port))
-  "Sent buffered request to graphic-forms-server, currently all request is not buffered so this is dummy."  
-  ())
+  (render-pending-mediums))
 
-;; FIXME: What happens when CLIM code calls tracking-pointer recursively?
+;;; Windows' event model is different from X that, on windows, event is processed per application (globally),
+;;; but not dispatch to clients (except button and menu). So we only need to set what is grabbed and in our
+;;; manual event dispatch, check whether grabbed and use different dispatch strategy.
+;;; in order to make grab and ungrab work correctly in recursive tracking-pointer, we use push and pop here.
 (defmethod port-grab-pointer ((port graphic-forms-port) pointer sheet)
-  ())
+  (declare (ignore pointer))
+  (push sheet (pointer-grab-sheet port)))
 
 (defmethod port-ungrab-pointer ((port graphic-forms-port) pointer sheet)
-  ())
+  (declare (ignore sheet pointer))
+  (pop (pointer-grab-sheet port)))
 
 (defmethod set-sheet-pointer-cursor ((port graphic-forms-port) sheet cursor)
   ())        

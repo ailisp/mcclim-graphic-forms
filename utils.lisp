@@ -8,6 +8,7 @@
 ;;   (menu BOOL)
 ;;   (exstyle LONG))
 
+;;; TODO
 (defun client-size-to-window-size-simple (size)
   ())
 
