@@ -497,7 +497,6 @@
 
 (defmethod medium-copy-area ((from-drawable graphic-forms-medium) from-x from-y width height
                              (to-drawable graphic-forms-medium) to-x to-y)
-  (debug-prin1 "from medium to medium")
   (let* ((from-sheet (medium-sheet from-drawable))
 	 (from-transformation (sheet-native-transformation from-sheet))
 	 (to-sheet (medium-sheet to-drawable))
@@ -514,31 +513,28 @@
 
 (defmethod medium-copy-area ((from-drawable graphic-forms-medium) from-x from-y width height
                              (to-drawable climi::pixmap) to-x to-y)
-  (debug-prin1 "from medium to pixmap")
   (let* ((from-sheet (medium-sheet from-drawable))
-	 (from-transformation (sheet-native-transformation from-sheet)))
+  	 (from-transformation (sheet-native-transformation from-sheet)))
     (climi::with-transformed-position (from-transformation from-x from-y)
-      (climi::with-pixmap-medium (to-medium to-drawable)
-	  (gfg:copy-image-area (image-of from-drawable) (image-of to-medium)
-			       :src-x (round-coordinate from-x) :src-y (round-coordinate from-y)
-			       :dst-x (round-coordinate to-x) :dst-y (round-coordinate to-y)
-			       :width (round width) :height(round height))))))
+      (gfg:copy-image-area (image-of from-drawable) (climi::pixmap-mirror to-drawable)
+			   :src-x (round-coordinate from-x) :src-y (round-coordinate from-y)
+			   :dst-x (round-coordinate to-x) :dst-y (round-coordinate to-y)
+			   :width (round width) :height(round height)))))
 
 (defmethod medium-copy-area ((from-drawable climi::pixmap) from-x from-y width height
                              (to-drawable graphic-forms-medium) to-x to-y)
-  (debug-prin1 "from pixmap to medium")
   (climi::with-transformed-position ((sheet-native-transformation (medium-sheet to-drawable))
-				     to-x to-y)
+  				     to-x to-y)
 
     (gfg:copy-image-area (climi::pixmap-mirror from-drawable) (image-of to-drawable)
     			 :src-x (round-coordinate from-x) :src-y (round-coordinate from-y)
     			 :dst-x (round-coordinate to-x) :dst-y (round-coordinate to-y)
-    			 :width (round width) :height (round height))
-    ))
+    			 :width (round width) :height (round height)))
+  (add-medium-to-render to-drawable)
+  (render-pending-mediums))
 
 (defmethod medium-copy-area ((from-drawable climi::pixmap) from-x from-y width height
                              (to-drawable climi::pixmap) to-x to-y)
-  (debug-prin1 "from pixmap to pixmap")
   (gfg:copy-image-area (climi::pixmap-mirror from-drawable) (climi::pixmap-mirror to-drawable)
 		       :src-x (round-coordinate from-x) :src-y (round-coordinate from-y)
 		       :dst-x (round-coordinate to-x) :dst-y (round-coordinate to-y)

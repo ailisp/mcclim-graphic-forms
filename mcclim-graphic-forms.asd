@@ -10,5 +10,5 @@
    (:file "port3")
    (:file "gadgets2")
    (:file "medium")
-   (:file "pixmap")
+;   (:file "pixmap")
    (:file "frame-manager")))

@@ -279,4 +279,24 @@
 (defmethod send-selection ((port graphic-forms-port) event string)
   nil)
 
-
+;; (defmethod synthesize-pointer-motion-event ((pointer graphic-forms-port))
+;;   (let* ((port (port pointer))
+;; 	 (sheet (port-pointer-sheet port)))
+;;     (when sheet
+;;       (let ((mirror (sheet-direct-mirror sheet)))
+;; 	(when mirror
+;; 	  (multiple-value-bind (x y same-screen-p child mask root-x root-y)
+;; 	      (xlib:query-pointer mirror)
+;; 	    (declare (ignore child))
+;; 	    (when same-screen-p
+;; 	      (make-instance
+;; 	       'pointer-motion-event
+;; 	       :pointer 0 :button (button-from-state mask)
+;; 	       :x x :y y
+;; 	       :graft-x root-x
+;; 	       :graft-y root-y
+;; 	       :sheet sheet
+;; 	       :modifier-state (clim-xcommon:x-event-state-modifiers port mask)
+;; 	       ;; The event initialization code will give us a
+;; 	       ;; reasonable timestamp.
+;; 	       :timestamp 0))))))))
