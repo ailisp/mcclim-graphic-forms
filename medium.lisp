@@ -43,19 +43,25 @@
 		(<+ `(make-instance 'gfg:image
 				    :size (gfs:make-size :width ,width :height ,height))))))))
 
-(defun %set-gc-foreground-background (medium gc &optional ink)
-  (let ((color (ink-to-color medium (or ink (medium-ink medium)))))
-    (<+ `(setf (gfg:background-color ,gc) ,color 
-	       (gfg:foreground-color ,gc) ,color))))
+(defun %set-gc-foreground-background (medium gc ink)
+  (if (eql ink +flipping-ink+)
+      (progn
+	(<+ `(gfg::set-mix-mode ,gc gfg::+r2-xorpen+)))
+      (let ((color (ink-to-color medium ink)))
+	(<+ `(setf (gfg:background-color ,gc) ,color 
+		   (gfg:foreground-color ,gc) ,color)))))
 
 (defmacro with-graphic-forms-medium ((gc medium &key (tr 'tr) ink) &body body)
-  `(when (%target-of ,medium)
-     (with-server-graphics-context (,gc (%target-of ,medium))
-       (%set-gc-clipping-region ,medium ,gc)
-       (%set-gc-foreground-background ,medium ,gc ,ink)
-       (let ((,tr (sheet-native-transformation (medium-sheet ,medium))))
-	 ,@body))
-     (add-medium-to-render ,medium)))
+  (let ((gink (gensym "ink")))
+   `(when (%target-of ,medium)
+      (with-server-graphics-context (,gc (%target-of ,medium))
+	(%set-gc-clipping-region ,medium ,gc)
+	(let ((,gink (or ,ink (medium-ink ,medium))))
+	  (unless (eql ,gink +transparent-ink+)
+	    (%set-gc-foreground-background ,medium ,gc ,gink)
+	    (let ((,tr (sheet-native-transformation (medium-sheet ,medium))))
+	      ,@body)
+	    (add-medium-to-render ,medium)))))))
 
 ;;; This function should only be called in graphic-forms-server thread
 (defun resize-medium-buffer (medium size)
@@ -176,16 +182,12 @@
 
 (defmethod medium-draw-point* ((medium graphic-forms-medium) x y)
   (with-graphic-forms-medium (gc medium)
-    (let ((color (ink-to-color medium (medium-ink medium))))
-      (<+ `(setf (gfg:foreground-color ,gc) ,color)))
     (climi::with-transformed-position (tr x y)
       (<+ `(gfg:draw-point ,gc (gfs:make-point :x ,(floor x)
 					       :y ,(floor y)))))))
 
 (defmethod medium-draw-points* ((medium graphic-forms-medium) coord-seq)
   (with-graphic-forms-medium (gc medium)
-    (let ((color (ink-to-color medium (medium-ink medium))))
-      (<+ `(setf (gfg:foreground-color ,gc) ,color)))
     (loop for (x y) on (coerce coord-seq 'list) by #'cddr do
 	 (climi::with-transformed-position (tr x y)
 	   (<+ `(gfg:draw-point ,gc
@@ -194,8 +196,6 @@
 
 (defmethod medium-draw-line* ((medium graphic-forms-medium) x1 y1 x2 y2)
   (with-graphic-forms-medium (gc medium)
-    (let ((color (ink-to-color medium (medium-ink medium))))
-      (<+ `(setf (gfg:foreground-color ,gc) ,color)))
     (climi::with-transformed-position (tr x1 y1)
       (climi::with-transformed-position (tr x2 y2)
 	(<+ `(gfg:draw-line ,gc
@@ -206,8 +206,6 @@
 
 (defmethod medium-draw-lines* ((medium graphic-forms-medium) coord-seq)
   (with-graphic-forms-medium (gc medium)
-    (let ((color (ink-to-color medium (medium-ink medium))))
-      (<+ `(setf (gfg:foreground-color ,gc) ,color)))
     (loop for (x1 y1 x2 y2) on (coerce coord-seq 'list) by #'cddddr do
 	 (climi::with-transformed-position (tr x1 y1)
 	   (climi::with-transformed-position (tr x2 y2)
@@ -398,26 +396,21 @@
                               align-x align-y
                               toward-x toward-y transform-glyphs)
   (declare (ignore align-x align-y toward-x toward-y transform-glyphs))
-  (when (%target-of medium)
+  (with-graphic-forms-medium (gc medium)
     (update-medium-font medium
 			(merge-text-styles (medium-text-style medium)
 					   (medium-default-text-style medium)))
     (setf string (normalize-text-data string))
-    (with-server-graphics-context (gc (%target-of medium))
-      (%set-gc-clipping-region medium gc)
-      (let ((font (font-of medium))
-	    (color (ink-to-color medium (medium-ink medium)))) ;ink-to-color here is questionable? server thread color obj?
-	(<+ `(setf (gfg:foreground-color ,gc) ,color))
-	(if font
-	    (<+ `(setf (gfg:font ,gc) ,font)))
-	(let ((ascent (<+ `(gfg:ascent (gfg:metrics ,gc ,font))))
-	      (x (floor x))
-	      (y (floor y)))
-	  (<+ `(gfg:draw-text ,gc
-			      ,(subseq string start (or end (length string)))
-			      (gfs:make-point :x ,x :y ,(- y ascent))
-			      '(:transparent))))))
-    (add-medium-to-render medium)))
+    (let ((font (font-of medium)))
+      (if font
+	  (<+ `(setf (gfg:font ,gc) ,font)))
+      (let ((ascent (<+ `(gfg:ascent (gfg:metrics ,gc ,font))))
+	    (x (floor x))
+	    (y (floor y)))
+	(<+ `(gfg:draw-text ,gc
+			    ,(subseq string start (or end (length string)))
+			    (gfs:make-point :x ,x :y ,(- y ascent))
+			    '(:transparent)))))))
 
 (defmethod medium-buffering-output-p ((medium graphic-forms-medium))
   t)
