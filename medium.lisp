@@ -230,6 +230,13 @@
     (climi::with-transformed-position (tr left top)
       (climi::with-transformed-position (tr right bottom)
 	(let ((rect (coordinates->rectangle left top right bottom)))
+	  (debug-prin1 "draw-rect" left top right bottom (medium-sheet medium))
+	  (when (string= "15" *previous-draw-text*)
+	    (when (= right 283)
+					;(error "666")
+	      (debug-prin1 666)
+	      ))
+	  (setf *previous-draw-text* "")
 	  (if filled
 	      (<+ `(gfg:draw-filled-rectangle ,gc ,rect))
 	      (<+ `(gfg:draw-rectangle ,gc ,rect))))))))
@@ -391,6 +398,7 @@
   ;; fixme, completely wrong
   (text-size medium string :text-style text-style :start start :end end))
 
+(defparameter *previous-draw-text* "" )
 (defmethod medium-draw-text* ((medium graphic-forms-medium) string x y
                               start end
                               align-x align-y
@@ -407,6 +415,8 @@
       (let ((ascent (<+ `(gfg:ascent (gfg:metrics ,gc ,font))))
 	    (x (floor x))
 	    (y (floor y)))
+	(debug-prin1 "draw-text" string)
+	(setf *previous-draw-text* string)
 	(<+ `(gfg:draw-text ,gc
 			    ,(subseq string start (or end (length string)))
 			    (gfs:make-point :x ,x :y ,(- y ascent))

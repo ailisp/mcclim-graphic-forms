@@ -32,5 +32,17 @@
 
 (defmethod handle-repaint :before ((pane graphic-forms-pane-mixin) region)
   (declare (ignore region))
-  (with-bounding-rectangle* (x1 y1 x2 y2) (sheet-region pane) 
-    (draw-rectangle* pane x1 y1 x2 y2 :filled t :ink +background-ink+)))
+  (with-bounding-rectangle* (x1 y1 x2 y2) (sheet-region pane)
+    ;; This actually only need for panes that not full of contents (leave something as background)
+    ;; maybe better did it in Graphic-Forms
+    ;; must avoid using clim:draw-rectangle here to avoid recording
+    (with-graphic-forms-medium (gc (sheet-medium pane) :ink +background-ink+)
+      (let ((rect (coordinates->rectangle x1 y1 x2 y2)))
+	(<+ `(gfg:draw-filled-rectangle ,gc ,rect))))))
+
+
+
+
+
+
+
