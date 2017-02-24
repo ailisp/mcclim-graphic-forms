@@ -8,7 +8,7 @@
    (:file "utils")
    (:file "graft")
    (:file "port3")
-   (:file "gadgets2")
    (:file "medium")
+   (:file "gadgets2")
 ;   (:file "pixmap")
    (:file "frame-manager")))

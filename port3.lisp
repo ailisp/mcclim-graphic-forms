@@ -279,24 +279,42 @@
 (defmethod send-selection ((port graphic-forms-port) event string)
   nil)
 
-;; (defmethod synthesize-pointer-motion-event ((pointer graphic-forms-port))
-;;   (let* ((port (port pointer))
-;; 	 (sheet (port-pointer-sheet port)))
-;;     (when sheet
-;;       (let ((mirror (sheet-direct-mirror sheet)))
-;; 	(when mirror
-;; 	  (multiple-value-bind (x y same-screen-p child mask root-x root-y)
-;; 	      (xlib:query-pointer mirror)
-;; 	    (declare (ignore child))
-;; 	    (when same-screen-p
-;; 	      (make-instance
-;; 	       'pointer-motion-event
-;; 	       :pointer 0 :button (button-from-state mask)
-;; 	       :x x :y y
-;; 	       :graft-x root-x
-;; 	       :graft-y root-y
-;; 	       :sheet sheet
-;; 	       :modifier-state (clim-xcommon:x-event-state-modifiers port mask)
-;; 	       ;; The event initialization code will give us a
-;; 	       ;; reasonable timestamp.
-;; 	       :timestamp 0))))))))
+(defun get-modifier-state ()
+  (logior (if (gfw:key-down-p gfw:+vk-shift+)
+	      +shift-key+
+	      0)
+	  (if (gfw:key-down-p gfw:+vk-alt+)
+	      +meta-key+
+	      0)
+	  (if (gfw:key-down-p gfw:+vk-control+)
+	      +control-key+
+	      0)))
+
+(defun get-mouse-button-state ()
+  (cond ((gfw:key-down-p gfw:+vk-lbutton+)
+	 +pointer-left-button+)
+	((gfw:key-down-p gfw:+vk-mbutton+)
+	 +pointer-middle-button+)
+	((gfw:key-down-p gfw:+vk-rbutton+)
+	 +pointer-right-button+)))
+
+
+(defmethod synthesize-pointer-motion-event ((pointer graphic-forms-port))
+  (let* ((port (port pointer))
+	 (sheet (climi::port-pointer-sheet port)))
+    (when sheet
+      (let ((mirror (sheet-direct-mirror sheet)))
+	(when mirror
+	  (debug-prin1 "synthesize" mirror)
+	  (let* ((pointer-pos (gfw:obtain-pointer-location))
+		 (x (gfs::point-x pointer-pos))
+		 (y (gfs::point-y pointer-pos))))
+	  (make-instance
+	   'pointer-motion-event
+	   :pointer 0 :button (get-mouse-button-state)
+	   :x x :y y
+	   ;:x x :y y TODO: x y here is actually graft-x graft-y
+;	   :graft-x root-x
+;	   :graft-y root-y
+	   :sheet sheet
+	   :modifier-state (get-modifier-state)))))))
