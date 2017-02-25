@@ -231,9 +231,6 @@
 (defmethod port-modifier-state ((port graphic-forms-port))
   ())
 
-(defmethod synthesize-pointer-motion-event ((pointer gfw-pointer))
-  ())
-
 ;;; Set the keyboard input focus for the port.
 
 (defmethod port-frame-keyboard-input-focus
@@ -299,7 +296,7 @@
 	 +pointer-right-button+)))
 
 
-(defmethod synthesize-pointer-motion-event ((pointer graphic-forms-port))
+(defmethod synthesize-pointer-motion-event ((pointer gfw-pointer))
   (let* ((port (port pointer))
 	 (sheet (climi::port-pointer-sheet port)))
     (when sheet
@@ -308,13 +305,13 @@
 	  (debug-prin1 "synthesize" mirror)
 	  (let* ((pointer-pos (gfw:obtain-pointer-location))
 		 (x (gfs::point-x pointer-pos))
-		 (y (gfs::point-y pointer-pos))))
-	  (make-instance
-	   'pointer-motion-event
-	   :pointer 0 :button (get-mouse-button-state)
-	   :x x :y y
-	   ;:x x :y y TODO: x y here is actually graft-x graft-y
-;	   :graft-x root-x
-;	   :graft-y root-y
-	   :sheet sheet
-	   :modifier-state (get-modifier-state)))))))
+		 (y (gfs::point-y pointer-pos)))
+	    (make-instance
+	     'pointer-motion-event
+	     :pointer 0 :button (get-mouse-button-state)
+	     :x x :y y
+					;:x x :y y TODO: x y here is actually graft-x graft-y
+					;	   :graft-x root-x
+					;	   :graft-y root-y
+	     :sheet sheet
+	     :modifier-state (get-modifier-state))))))))

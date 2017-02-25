@@ -138,10 +138,14 @@ to track this information manually.")
 (defclass sheet-event-dispatcher (gfw:event-dispatcher)
   ((port
     :accessor port
+    :initform nil)
+   (last-pointer-position
+    :accessor last-pointer-position
     :initform nil))
   (:documentation "Server side windows native event handler"))
 
 (defvar *sheet-dispatcher* (<+ `(make-instance 'sheet-event-dispatcher)))
+(setf (last-pointer-position *sheet-dispatcher*) (<+ `(gfs:make-point)))
 
 ;;;
 ;;; dispatchers and callbacks
@@ -231,19 +235,26 @@ to track this information manually.")
      (warn "unknown button name: ~A" name)
      nil)))
 
+(defun mouse-actually-move (last-pos new-pos)
+  (unless (gfs:equal-point-p last-pos new-pos)
+    t))
+
 (defmethod gfw:event-mouse-move
     ((self sheet-event-dispatcher) mirror point button)
-  (server-add-event 
-   (make-instance 'pointer-motion-event
-		  :pointer 0
-		  :sheet (sheet mirror)
-		  :x (gfs:point-x point)
-		  :y (gfs:point-y point)
-		  :button (translate-button-name button)
-		  ;; FIXME:
+  (when (mouse-actually-move (last-pointer-position self) point)
+    (setf (gfs:point-x (last-pointer-position self)) (gfs:point-x point)
+	  (gfs:point-y (last-pointer-position self)) (gfs:point-y point))
+    (server-add-event 
+     (make-instance 'pointer-motion-event
+		    :pointer 0
+		    :sheet (sheet mirror)
+		    :x (gfs:point-x point)
+		    :y (gfs:point-y point)
+		    :button (translate-button-name button)
+		    ;; FIXME:
 ;;; 		       :graft-x
 ;;; 		       :graft-y
-		  :modifier-state 0)))
+		    :modifier-state 0))))
 
 (defmethod gfw:event-mouse-down ((self sheet-event-dispatcher) mirror point button)
   (setf *graphic-forms-mouse-down-sheet* (sheet mirror))

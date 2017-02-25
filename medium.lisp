@@ -29,6 +29,7 @@
       (<+ `(gfg:draw-image ,gc ,(image-of medium) ,*medium-origin*)))))
 
 (defun render-pending-mediums ()
+;  (debug-prin1 "render-pending-meidums" *mediums-to-render*)
   (loop for medium in *mediums-to-render*
         do (render-medium-buffer medium))
   (setf *mediums-to-render* nil))
