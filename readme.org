@@ -19,6 +19,6 @@ Currently buttons, labels seem works (although must modify general pane def, oth
 
 [[./puzzle.png]]
 
-[[./logic-cube.ong]]
+[[./logic-cube.png]]
 
 
