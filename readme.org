@@ -8,8 +8,17 @@ Currently buttons, labels seem works (although must modify general pane def, oth
 
 ** Screenshots
 [[./demodemo.png]]
+
 [[./label-tests.png]]
+
 [[./calc.png]]
+
 [[./clim-fig.png]]
+
 [[./gadget-test.png]]
+
 [[./puzzle.png]]
+
+[[./logic-cube.ong]]
+
+

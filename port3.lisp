@@ -175,7 +175,8 @@
 
 (defmethod process-next-event :after ((port graphic-forms-port) &key wait-function (timeout nil))
   (declare (ignore wait-function timeout))
-  (render-pending-mediums))
+;  (render-pending-mediums)
+  )
 
 (defmethod make-graft ((port graphic-forms-port) &key (orientation :default) (units :device))
   (let ((graft (make-instance 'graphic-forms-graft
@@ -244,7 +245,8 @@
   (setf (frame-properties frame 'focus) focus))
 
 (defmethod port-force-output ((port graphic-forms-port))
-  (render-pending-mediums))
+;  (render-pending-mediums)
+  )
 
 ;;; Windows' event model is different from X that, on windows, event is processed per application (globally),
 ;;; but not dispatch to clients (except button and menu). So we only need to set what is grabbed and in our

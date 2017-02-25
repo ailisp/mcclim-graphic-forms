@@ -15,6 +15,9 @@ to track this information manually.")
 
 (defparameter *graphic-forms-server-debug* t)
 
+
+;;; Debugging utils
+
 ;; This must be set, otherwise because thread bindings, directly print to *standard-output* will not display in SLIME.
 (defparameter *graphic-forms-server-debug-output* *standard-output*)
 
@@ -188,18 +191,24 @@ to track this information manually.")
 
 (defmethod gfw:event-paint ((self sheet-event-dispatcher) mirror gc rect)
   (let ((sheet (sheet mirror)))
-    (when (and (typep sheet 'sheet-with-medium-mixin)
-;               (not (image-of (sheet-medium sheet)))
-	       )
-      (let ((c (ink-to-color (sheet-medium sheet)
-                             (sheet-desired-ink sheet))))
-        (setf (gfg:background-color gc) c
-              (gfg:foreground-color gc) c))
-      (gfg:draw-filled-rectangle gc rect))
-    (server-add-event
-     (make-instance 'window-repaint-event
-    		    :sheet sheet
-    		    :region (translate-rectangle rect)))))
+    ;; (when (and (typep sheet 'sheet-with-medium-mixin)
+;; ;               (not (image-of (sheet-medium sheet)))
+;; 	       )
+;;       (let ((c (ink-to-color (sheet-medium sheet)
+;;                              (sheet-desired-ink sheet))))
+;;         (setf (gfg:background-color gc) c
+;;               (gfg:foreground-color gc) c))
+;;       (gfg:draw-filled-rectangle gc rect))
+    ;; (server-add-event
+    ;;  (make-instance 'window-repaint-event
+    ;; 		    :sheet sheet
+    ;; 		    :region (translate-rectangle rect)))
+    (debug-prin1 "event-paint start" mirror)
+    (distribute-event (port sheet) (make-instance 'window-repaint-event
+						  :sheet sheet
+						  :region (translate-rectangle rect)))
+    (debug-prin1 "event-paint end" mirror)
+    ))
 
 ;;; This function should only be called in graphics-forms-server thread
 (defun generate-configuration-event (mirror pnt size)

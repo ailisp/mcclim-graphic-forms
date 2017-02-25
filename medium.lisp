@@ -29,7 +29,8 @@
       (<+ `(gfg:draw-image ,gc ,(image-of medium) ,*medium-origin*)))))
 
 (defun render-pending-mediums ()
-;  (debug-prin1 "render-pending-meidums" *mediums-to-render*)
+  (when *mediums-to-render*
+    (debug-prin1 "render-pending-mediums" *mediums-to-render*))
   (loop for medium in *mediums-to-render*
         do (render-medium-buffer medium))
   (setf *mediums-to-render* nil))
@@ -230,10 +231,10 @@
   (with-graphic-forms-medium (gc medium)
     (climi::with-transformed-position (tr left top)
       (climi::with-transformed-position (tr right bottom)
-	(let ((rect (coordinates->rectangle left top right bottom)))
-	  (if filled
-	      (<+ `(gfg:draw-filled-rectangle ,gc ,rect))
-	      (<+ `(gfg:draw-rectangle ,gc ,rect))))))))
+  	(let ((rect (coordinates->rectangle left top right bottom)))
+  	  (if filled
+  	      (<+ `(gfg:draw-filled-rectangle ,gc ,rect))
+  	      (<+ `(gfg:draw-rectangle ,gc ,rect))))))))
 
 (defmethod medium-draw-rectangles* ((medium graphic-forms-medium) position-seq filled)
   (with-graphic-forms-medium (gc medium)
@@ -525,7 +526,8 @@
     			 :dst-x (round-coordinate to-x) :dst-y (round-coordinate to-y)
     			 :width (round width) :height (round height)))
   (add-medium-to-render to-drawable)
-  (render-pending-mediums))
+;  (render-pending-mediums)
+  )
 
 (defmethod medium-copy-area ((from-drawable climi::pixmap) from-x from-y width height
                              (to-drawable climi::pixmap) to-x to-y)
