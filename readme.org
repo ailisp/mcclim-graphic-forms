@@ -1,10 +1,21 @@
-** Current Status
-This project intends to fix and continue to finish the uncomplete Graphic-Forms backend for McCLIM.
-Original Graphic-Forms backend for McCLIM 0.9.6 couldn't work because it need to use a Windows message loop to keep the GUI responsive on Windows, while McCLIM needs to have the simple-event-loop to process events. So McCLIM seems to be designed to work with a Client/Server structured GUI toolkit, while Windows native GUI apps are not. So there must be a wrapper to provide Client/Server style to fit in McCLIM's model.
-Changes have been made since McCLIM 0.9.6. The climi::top-level-sheet-pane is not mirrored-sheet-mixin and permanent-medium-sheet-output-mixin any more, thus a new, port specific class for mirrored top level pane is required. Also, many common methods in Backend has been moved to the Standard backend. Therefore, we need to directly use classes as standard-full-mirrored-sheet-mixin, standard-graft to replace the orginal mirrored-sheet-mixin and graft.
-Besides these, Windows' event model is not like X. Some conversion, therefore, must be made in the Graphic-Forms server side.
-McCLIM and CLIM spec are both quite delicated complicated for me. So this project may take time to become fully useable and stable.
-Currently buttons, labels seem works (although must modify general pane def, other gadgets partially work, drawings work. border-pane and menu are not work.
+* McCLIM-Graphic-Forms
+This project works as a windows backend for McCLIM, currently most demos of McCLIM works, but support for drawing of presentation is weak and incomplete and other bugs exist. Currently only most recent version of Clozure Common Lisp on 32 bit Windows 7 are tested.
+
+** Usage
+To have a try, clone Graphic-Forms and this project to a quicklisp local project directory:
+
+#+BEGIN_SRC shell
+git clone https://gitlab.common-lisp.net/byao/Graphic-Forms
+git clone https://github.com/ailisp/mcclim-graphic-forms.git
+#+END_SRC
+
+Then in your REPL:
+
+#+BEGIN_SRC lisp
+(push :mcclim-graphic-forms *features*)
+(ql:quickload :clim-examples)
+(clim-demo:demodemo)
+#+END_SRC
 
 ** Screenshots
 [[./doc/screenshot/demodemo.png]]
@@ -22,3 +33,12 @@ Currently buttons, labels seem works (although must modify general pane def, oth
 [[./doc/screenshot/logic-cube.png]]
 
 
+
+** Background
+This project intends to fix and continue to finish the incomplete Graphic-Forms backend for McCLIM.
+Original Graphic-Forms backend for McCLIM 0.9.6 couldn't work because it need to use a Windows message loop to keep the GUI responsive on Windows, while McCLIM needs to have the simple-event-loop to process events. So McCLIM seems to be designed to work with a Client/Server structured GUI toolkit, while Windows native GUI apps are not. So there must be a wrapper to provide Client/Server style to fit in McCLIM's model.
+Changes have been made since McCLIM 0.9.6. The climi::top-level-sheet-pane is not mirrored-sheet-mixin and permanent-medium-sheet-output-mixin any more, thus a new, port specific class for mirrored top level pane is required. Also, many common methods in Backend has been moved to the Standard backend. Therefore, we need to directly use classes as standard-full-mirrored-sheet-mixin, standard-graft to replace the orginal mirrored-sheet-mixin and graft.
+Besides these, Windows' event model is not like X. Some conversion, therefore, must be made in the Graphic-Forms server side.
+McCLIM and CLIM spec are both quite delicated complicated for me. So this project may take time to become fully useable and stable.
+
+The short term goal is to make the portable CLIM look and feel works stably and long term goal is to support both windows native gadgets and portable ones.
