@@ -175,6 +175,9 @@
 
 (defmethod process-next-event :after ((port graphic-forms-port) &key wait-function (timeout nil))
   (declare (ignore wait-function timeout))
+  ;; (bt:with-lock-held (*mediums-to-render-lock*)
+  ;;   (when *mediums-to-render*
+  ;;     (debug-prin1 "process-next-event :after" *mediums-to-render*)))
 ;  (render-pending-mediums)
   )
 
@@ -245,7 +248,8 @@
   (setf (frame-properties frame 'focus) focus))
 
 (defmethod port-force-output ((port graphic-forms-port))
-;  (render-pending-mediums)
+
+  (render-pending-mediums)
   )
 
 ;;; Windows' event model is different from X that, on windows, event is processed per application (globally),

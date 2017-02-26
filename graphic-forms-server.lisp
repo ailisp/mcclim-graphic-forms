@@ -199,15 +199,13 @@ to track this information manually.")
 ;;         (setf (gfg:background-color gc) c
 ;;               (gfg:foreground-color gc) c))
 ;;       (gfg:draw-filled-rectangle gc rect))
-    ;; (server-add-event
-    ;;  (make-instance 'window-repaint-event
-    ;; 		    :sheet sheet
-    ;; 		    :region (translate-rectangle rect)))
-    (debug-prin1 "event-paint start" mirror)
-    (distribute-event (port sheet) (make-instance 'window-repaint-event
-						  :sheet sheet
-						  :region (translate-rectangle rect)))
-    (debug-prin1 "event-paint end" mirror)
+    (server-add-event
+     (make-instance 'window-repaint-event
+    		    :sheet sheet
+    		    :region (translate-rectangle rect)))
+    ;; (distribute-event (port sheet) (make-instance 'window-repaint-event
+    ;; 						  :sheet sheet
+    ;; 						  :region (translate-rectangle rect)))
     ))
 
 ;;; This function should only be called in graphics-forms-server thread

@@ -7,18 +7,18 @@ McCLIM and CLIM spec are both quite delicated complicated for me. So this projec
 Currently buttons, labels seem works (although must modify general pane def, other gadgets partially work, drawings work. border-pane and menu are not work.
 
 ** Screenshots
-[[./demodemo.png]]
+[[./doc/screenshot/demodemo.png]]
 
-[[./label-tests.png]]
+[[./doc/screenshot/label-tests.png]]
 
-[[./calc.png]]
+[[./doc/screenshot/calc.png]]
 
-[[./clim-fig.png]]
+[[./doc/screenshot/clim-fig.png]]
 
-[[./gadget-test.png]]
+[[./doc/screenshot/gadget-test.png]]
 
-[[./puzzle.png]]
+[[./doc/screenshot/puzzle.png]]
 
-[[./logic-cube.png]]
+[[./doc/screenshot/logic-cube.png]]
 
 

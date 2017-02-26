@@ -15,13 +15,16 @@
 
 (defvar *medium-origin*     (<+ `(gfs:make-point)))
 (defvar *mediums-to-render* nil)
+(defvar *mediums-to-render-lock* (bt:make-lock "MEDIUMS-TO-RENDER-LOCK"))
 
 (defun add-medium-to-render (medium)
   (when (image-of medium)
-    (pushnew medium *mediums-to-render* :test #'eql)))
+    (bt:with-lock-held (*mediums-to-render-lock*)
+      (pushnew medium *mediums-to-render* :test #'eql))))
 
 (defun remove-medium-to-render (medium)
-  (setf *mediums-to-render* (remove medium *mediums-to-render*)))
+  (bt:with-lock-held (*mediums-to-render-lock*)
+    (setf *mediums-to-render* (remove medium *mediums-to-render*))))
 
 (defun render-medium-buffer (medium)
   (let ((mirror (climi::port-lookup-mirror (port (medium-sheet medium)) (medium-sheet medium))))
@@ -29,11 +32,10 @@
       (<+ `(gfg:draw-image ,gc ,(image-of medium) ,*medium-origin*)))))
 
 (defun render-pending-mediums ()
-  (when *mediums-to-render*
-    (debug-prin1 "render-pending-mediums" *mediums-to-render*))
-  (loop for medium in *mediums-to-render*
-        do (render-medium-buffer medium))
-  (setf *mediums-to-render* nil))
+  (bt:with-lock-held (*mediums-to-render-lock*)
+    (loop for medium in *mediums-to-render*
+       do (render-medium-buffer medium))
+    (setf *mediums-to-render* nil)))
 
 (defun %target-of (medium)
   (let ((sheet (medium-sheet medium)))
@@ -504,7 +506,8 @@
 			       :src-x (round-coordinate from-x) :src-y (round-coordinate from-y)
 			       :dst-x (round-coordinate to-x) :dst-y (round-coordinate to-y)
 			       :width (round width) :height(round height))
-	  (add-medium-to-render to-drawable))))))
+	  (add-medium-to-render to-drawable)
+	  )))))
 
 (defmethod medium-copy-area ((from-drawable graphic-forms-medium) from-x from-y width height
                              (to-drawable climi::pixmap) to-x to-y)
@@ -526,7 +529,7 @@
     			 :dst-x (round-coordinate to-x) :dst-y (round-coordinate to-y)
     			 :width (round width) :height (round height)))
   (add-medium-to-render to-drawable)
-;  (render-pending-mediums)
+  ;(render-pending-mediums)
   )
 
 (defmethod medium-copy-area ((from-drawable climi::pixmap) from-x from-y width height
